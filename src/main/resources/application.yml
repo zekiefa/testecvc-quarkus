@@ -1,0 +1,7 @@
+quarkus:
+  rest-client:
+    br.com.cvc.evaluation.broker.BrokerService:
+                url: http://localhost:3000
+
+booking:
+  fee: 0.70

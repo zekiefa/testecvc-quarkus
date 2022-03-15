@@ -1,0 +1,3 @@
+quarkus:
+  test:
+    profile: test
