@@ -90,7 +90,6 @@ public class BookingService {
 
     public Optional<Hotel> getHotelDetails(final Integer codeHotel) {
         log.info("Finding hotel details: {}", codeHotel);
-
         final var hotelDetails = this.brokerService.getHotelDetails(codeHotel);
 
         if (Optional.ofNullable(hotelDetails).isPresent()) {
