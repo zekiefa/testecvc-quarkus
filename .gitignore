@@ -25,7 +25,9 @@ hs_err_pid*
 # IntelliJ project files
 .idea/
 target/
+*.iml
 
 # Maven wrappers
 mvnw
 mvnw.cmd
+.mvn/
