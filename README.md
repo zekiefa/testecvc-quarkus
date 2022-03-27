@@ -5,7 +5,6 @@
 - Quarkus 2.7.5
 - [Lombok](https://projectlombok.org) to avoid boilerplate code
 - [Mapstruct](https://mapstruct.org) for conversions between domains
-- [WebClient](https://www.baeldung.com/spring-5-webclient): a reactive client HTTP
 - [SL4J](https://www.slf4j.org/manual.html) for logging
 - [JUnit 5](https://junit.org/junit5/docs/current/user-guide) for unit tests
 - [Mockito](https://javadoc.io/doc/org.mockito/mockito-core/latest/org/mockito/Mockito.html)
