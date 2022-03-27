@@ -1,0 +1,34 @@
+[
+  {
+    "id":1,
+    "name":"Bacana Hotel",
+    "cityCode":55,
+    "cityName":"Gotham City",
+    "rooms":[
+      {
+        "roomID":1,
+        "categoryName":"Luxury",
+        "price":{
+          "adult":900.0,
+          "child":450.0
+        }
+      }
+    ]
+  },
+  {
+    "id":2,
+    "name":"Wayne Hotel",
+    "cityCode":55,
+    "cityName":"Gotham City",
+    "rooms":[
+      {
+        "roomID":1,
+        "categoryName":"Joker",
+        "price":{
+          "adult":500.0,
+          "child":250.0
+        }
+      }
+    ]
+  }
+]
