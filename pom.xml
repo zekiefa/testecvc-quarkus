@@ -23,6 +23,7 @@
     <hamcrest.version>2.2</hamcrest.version>
     <easy-random-core.version>5.0.0</easy-random-core.version>
     <quarkus-logging-logback.version>0.11.0</quarkus-logging-logback.version>
+    <jacoco-maven-plugin.version>0.8.8</jacoco-maven-plugin.version>
   </properties>
 
   <dependencyManagement>
@@ -93,6 +94,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-jacoco</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>io.rest-assured</groupId>
       <artifactId>rest-assured</artifactId>
       <scope>test</scope>
@@ -159,6 +165,77 @@
           </systemPropertyVariables>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${jacoco-maven-plugin.version}</version>
+        <executions>
+          <execution>
+            <id>default-prepare-agent</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+            <configuration>
+              <exclClassLoaders>*QuarkusClassLoader</exclClassLoaders>
+              <destFile>${project.build.directory}/jacoco-quarkus.exec</destFile>
+              <append>true</append>
+            </configuration>
+          </execution>
+          <execution>
+            <id>default-prepare-agent-integration</id>
+            <goals>
+              <goal>prepare-agent-integration</goal>
+            </goals>
+            <configuration>
+              <exclClassLoaders>*QuarkusClassLoader</exclClassLoaders>
+              <destFile>${project.build.directory}/jacoco-quarkus.exec</destFile>
+              <append>true</append>
+            </configuration>
+          </execution>
+          <execution>
+            <id>report-it</id>
+            <phase>post-integration-test</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+            <configuration>
+              <dataFile>${project.build.directory}/jacoco-quarkus.exec</dataFile>
+              <outputDirectory>${project.build.directory}/jacoco-report</outputDirectory>
+            </configuration>
+          </execution>
+          <execution>
+            <id>jacoco-check</id>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <phase>test</phase>
+            <configuration>
+              <dataFile>${project.build.directory}/jacoco-quarkus.exec</dataFile>
+              <rules>
+                <rule>
+                  <element>PACKAGE</element>
+                  <limits>
+                    <limit>
+                      <counter>LINE</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>0.8</minimum>
+                    </limit>
+                    <limit>
+                      <counter>BRANCH</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>0.72</minimum>
+                    </limit>
+                  </limits>
+                </rule>
+              </rules>
+              <excludes>
+                <exclude>br/com/cvc/evaluation/domain/*</exclude>
+                <exclude>br/com/cvc/evaluation/broker/dto/*</exclude>
+              </excludes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
@@ -186,6 +263,7 @@
                     <native.image.path>${project.build.directory}/${project.build.finalName}-runner</native.image.path>
                     <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                     <maven.home>${maven.home}</maven.home>
+                    <quarkus.test.arg-line>${argLine}</quarkus.test.arg-line>
                   </systemPropertyVariables>
                 </configuration>
               </execution>

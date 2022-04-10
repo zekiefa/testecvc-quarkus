@@ -3,7 +3,9 @@ package br.com.cvc.evaluation.service;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -15,8 +17,13 @@ import javax.inject.Inject;
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import br.com.cvc.evaluation.broker.BrokerService;
@@ -88,4 +95,5 @@ class BookingServiceTest {
                                         .calculateFee(any(), anyLong())
         );
     }
+
 }
