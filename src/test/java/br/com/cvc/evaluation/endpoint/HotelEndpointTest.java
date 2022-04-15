@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test;
 @QuarkusTest
 @QuarkusTestResource(WireMockExtensions.class)
 public class HotelEndpointTest {
-
     @Test
     void testFind() {
         final var idHotel = 1;
