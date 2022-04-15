@@ -14,7 +14,7 @@
 
 ### Instructions
 - Clone the project
-- Run the project: $ mvn quarkus:dev -DdebugHost=0.0.0.0
+- Run the project: `$ mvn quarkus:dev -DdebugHost=0.0.0.0`
 
 ### About the application
 It's a RESTFull API for booking and searching a hotel.
