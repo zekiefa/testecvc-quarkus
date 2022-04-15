@@ -3,12 +3,11 @@ package br.com.cvc.evaluation.service;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -17,13 +16,9 @@ import javax.inject.Inject;
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import br.com.cvc.evaluation.broker.BrokerService;
@@ -96,4 +91,33 @@ class BookingServiceTest {
         );
     }
 
+    @Test
+    void testFindNoHotels() {
+        // Arranges
+        final var fee = BigDecimal.ONE;
+        when(brokerService.findHotelsByCity(anyInt())).thenReturn(Collections.emptySet());
+        when(feeService.calculateFee(any(), anyLong())).thenReturn(fee);
+
+        // Act
+        final var checkin = LocalDate.now();
+        final var checkout = checkin.plusDays(DayOfWeek.values().length);
+        final var hotels = bookingService.findHotels(27, checkin, checkout, 3, 2);
+
+        // Asserts
+        assertTrue(hotels.isEmpty());
+    }
+
+    @Test
+    void testGetEmptyHotelDetails() {
+        // Arranges
+        final var fee = BigDecimal.ONE;
+        when(brokerService.getHotelDetails(anyInt())).thenReturn(null);
+        when(feeService.calculateFee(any(), anyLong())).thenReturn(fee);
+
+        // Act
+        final var hotel = bookingService.getHotelDetails(1);
+
+        // Asserts
+        assertTrue(hotel.isEmpty());
+    }
 }
