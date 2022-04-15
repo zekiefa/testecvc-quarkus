@@ -1,4 +1,4 @@
-package br.com.cvc.evaluation.broker;
+package br.com.cvc.evaluation.extensions;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
