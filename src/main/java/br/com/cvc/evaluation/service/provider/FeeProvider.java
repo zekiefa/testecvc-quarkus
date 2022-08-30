@@ -1,4 +1,4 @@
-package br.com.cvc.evaluation.service;
+package br.com.cvc.evaluation.service.provider;
 
 import java.math.BigDecimal;
 

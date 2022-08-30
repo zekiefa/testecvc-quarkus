@@ -4,9 +4,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
+import static javax.json.Json.createParser;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import javax.json.Json;
 import javax.json.JsonValue;
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,7 +52,7 @@ public class WireMockExtensions implements QuarkusTestResourceLifecycleManager {
                             .willReturn(okJson(hotels)));
 
             // Stub for each hotel
-            try (StringReader sr = new StringReader(hotels); final var parser = Json.createParser(sr)) {
+            try (StringReader sr = new StringReader(hotels); final var parser = createParser(sr)) {
                 parser.next();
                 for (JsonValue hotel : parser.getArray()) {
                     final var id = hotel.asJsonObject().getInt("id");
