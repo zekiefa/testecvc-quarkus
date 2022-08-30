@@ -5,3 +5,25 @@ quarkus:
 
 booking:
   fee: 0.70
+
+jwt:
+  expiration: 86400000
+  issuer: testecvc
+
+smallrye:
+  jwt:
+    sign:
+      key:
+        location: jwt/privateKey.pem
+
+mp:
+  jwt:
+    verify:
+      issuer: testecvc
+      publickey:
+        location: jwt/publicKey.pem
+
+usuario:
+  login: "usuario"
+  passwd: "senha"
+
