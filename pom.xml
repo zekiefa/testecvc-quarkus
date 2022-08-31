@@ -236,8 +236,8 @@
                 </rule>
               </rules>
               <excludes>
-                <exclude>br/com/cvc/evaluation/domain/*</exclude>
-                <exclude>br/com/cvc/evaluation/broker/dto/*</exclude>
+                <exclude>**/domain/*</exclude>
+                <exclude>**/broker/dto/*</exclude>
               </excludes>
             </configuration>
           </execution>
