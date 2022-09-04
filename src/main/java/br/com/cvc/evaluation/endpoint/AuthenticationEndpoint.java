@@ -1,5 +1,6 @@
 package br.com.cvc.evaluation.endpoint;
 
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -16,6 +17,7 @@ import br.com.cvc.evaluation.service.UserService;
 import io.quarkus.elytron.security.common.BcryptUtil;
 
 @Path("/auth")
+@RequestScoped
 public class AuthenticationEndpoint {
     @Inject
     TokenService tokenService;
