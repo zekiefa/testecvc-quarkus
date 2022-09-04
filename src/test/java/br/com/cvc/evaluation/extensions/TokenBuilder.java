@@ -9,6 +9,7 @@ public class TokenBuilder {
 
     public String createJWT(final String subject, final Long ttlMillis) {
         final var now = Instant.ofEpochMilli(System.currentTimeMillis());
+
         return Jwt
                         .issuer("testecvc")
                         .issuedAt(now)

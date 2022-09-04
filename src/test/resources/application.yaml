@@ -6,3 +6,7 @@ smallrye:
   jwt:
     sign:
       key: jwt/private.key
+
+usuario:
+  login: "usuario"
+  passwd: "senha"
