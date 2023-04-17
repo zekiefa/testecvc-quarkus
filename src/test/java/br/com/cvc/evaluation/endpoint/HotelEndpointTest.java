@@ -36,7 +36,7 @@ public class HotelEndpointTest {
 
         assertAll("success",
                         () -> assertNotNull(response),
-                        () -> assertThat(response.getId(), is(idHotel))
+                        () -> assertThat(response.id(), is(idHotel))
         );
     }
 

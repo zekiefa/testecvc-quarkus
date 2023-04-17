@@ -1,13 +1,5 @@
 package br.com.cvc.evaluation.domain;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+public record Login(String user, String passwd) {
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class Login {
-    private String user;
-    private String passwd;
 }

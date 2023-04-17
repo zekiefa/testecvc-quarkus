@@ -13,15 +13,15 @@ import br.com.cvc.evaluation.broker.BrokerService;
 import br.com.cvc.evaluation.broker.dto.BrokerHotel;
 import br.com.cvc.evaluation.broker.dto.BrokerHotelRoom;
 import br.com.cvc.evaluation.domain.Hotel;
+import br.com.cvc.evaluation.domain.PriceDetail;
 import br.com.cvc.evaluation.domain.Room;
-import br.com.cvc.evaluation.service.mapper.HotelMapper;
-import br.com.cvc.evaluation.service.mapper.RoomMapper;
-import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 @ApplicationScoped
 public class BookingService {
+    private static final Logger log = LoggerFactory.getLogger(BookingService.class);
     private static final Long ONE_DAY = Long.valueOf("1");
     private static final Integer ONE_PAX = 1;
 
@@ -31,12 +31,6 @@ public class BookingService {
 
     @Inject
     FeeService feeService;
-
-    @Inject
-    HotelMapper hotelMapper;
-
-    @Inject
-    RoomMapper roomMapper;
 
     private BigDecimal calculateTotalPrice(final BigDecimal paxPrice, final Long days) {
         log.info("Calculating total price: pax price {} for {} days", paxPrice, days);
@@ -53,39 +47,37 @@ public class BookingService {
     private Room calculateTotalPrice(final BrokerHotelRoom brokerHotelRoom, final Long days, final Integer adults,
                     final Integer child) {
         log.info("Calculating total price: room {}, {} days, {} adults, {} child",
-                        brokerHotelRoom.getCategoryName(), days, adults, child);
-        final var room = this.roomMapper.toDomain(brokerHotelRoom);
+                        brokerHotelRoom.categoryName(), days, adults, child);
+        var pricePerDayAdult = BigDecimal.ZERO;
+        var pricePerDayChild = BigDecimal.ZERO;
         var totalPrice = BigDecimal.ZERO;
 
         if (adults > 0) {
-            room.getPriceDetail()
-                            .setPricePerDayAdult(this.calculateTotalPrice(brokerHotelRoom.getPrice().getAdult(), ONE_DAY));
-            totalPrice = totalPrice.add(room.getPriceDetail().getPricePerDayAdult().multiply(BigDecimal.valueOf(days)));
+            pricePerDayAdult = this.calculateTotalPrice(brokerHotelRoom.price().adult(), ONE_DAY);
+            totalPrice = totalPrice.add(brokerHotelRoom.price().adult().multiply(BigDecimal.valueOf(days)));
         }
 
         if (child > 0) {
-            room.getPriceDetail()
-                            .setPricePerDayChild(this.calculateTotalPrice(brokerHotelRoom.getPrice().getChild(), ONE_DAY));
-            totalPrice = totalPrice.add(room.getPriceDetail().getPricePerDayChild().multiply(BigDecimal.valueOf(days)));
+            pricePerDayChild = this.calculateTotalPrice(brokerHotelRoom.price().child(), ONE_DAY);
+            totalPrice = totalPrice.add(brokerHotelRoom.price().child().multiply(BigDecimal.valueOf(days)));
         }
 
         log.info("Total price: {}", totalPrice);
-        room.setTotalPrice(totalPrice);
-
-        return room;
+        return new Room(brokerHotelRoom.roomID(),
+                        brokerHotelRoom.categoryName(),
+                        totalPrice,
+                        new PriceDetail(pricePerDayAdult, pricePerDayChild));
     }
 
     private Hotel calculateBooking(final BrokerHotel brokerHotel, final Long days, final Integer adults,
                     final Integer child) {
         log.info("Calculating booking: hotel {}, {} days, {} adults, {} child",
-                        brokerHotel.getName(), days, adults, child);
-        final var hotel = this.hotelMapper.toDomain(brokerHotel);
-        hotel.setRooms(brokerHotel.getRooms().stream()
+                        brokerHotel.name(), days, adults, child);
+        final var rooms = brokerHotel.rooms().stream()
                         .map(brokerHotelRoom -> this.calculateTotalPrice(brokerHotelRoom, days, adults, child))
-                        .collect(Collectors.toList()));
+                        .toList();
 
-        log.info("Booking result {}", hotel);
-        return hotel;
+        return new Hotel(brokerHotel.id(), brokerHotel.cityName(), brokerHotel.name(), rooms);
     }
 
     public Optional<Hotel> getHotelDetails(final Integer codeHotel) {

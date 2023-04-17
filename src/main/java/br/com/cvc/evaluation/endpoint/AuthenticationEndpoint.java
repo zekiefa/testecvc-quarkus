@@ -26,7 +26,7 @@ public class AuthenticationEndpoint {
 
     @POST
     public Response login(final Login loginAuth) {
-        final var search = this.userService.findByLogin(loginAuth.getUser());
+        final var search = this.userService.findByLogin(loginAuth.user());
 
         if (search.isEmpty()) {
             return Response.status(Response.Status.NOT_FOUND.getStatusCode(),
@@ -35,20 +35,17 @@ public class AuthenticationEndpoint {
         }
 
         final var user = search.get();
-        if (!BcryptUtil.matches(loginAuth.getPasswd(), user.getPassword()))
+        if (!BcryptUtil.matches(loginAuth.passwd(), user.password()))
             return Response.status(Response.Status.FORBIDDEN.getStatusCode(),
                                             "User not authorized")
                             .build();
 
-        final var token = tokenService.generateToken(user.getUsername(),
-                        Stream.ofNullable(user.getProfiles())
+        final var token = tokenService.generateToken(user.username(),
+                        Stream.ofNullable(user.profiles())
                                         .flatMap(Set::stream)
-                                        .map(Profile::getName)
+                                        .map(Profile::name)
                                         .collect(Collectors.toSet()));
-        final var response = Token.builder()
-                        .token(token)
-                        .type("Bearer")
-                        .build();
+        final var response = new Token(token, "Bearer");
 
         return Response.ok(response).build();
     }

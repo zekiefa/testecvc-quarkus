@@ -1,5 +1,6 @@
 package br.com.cvc.evaluation.service;
 
+import static br.com.cvc.evaluation.fixtures.FixtureUtil.nextBrokerHotel;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -19,7 +20,6 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import br.com.cvc.evaluation.broker.BrokerService;
 import br.com.cvc.evaluation.broker.dto.BrokerHotel;
@@ -27,7 +27,6 @@ import br.com.cvc.evaluation.domain.Hotel;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.mockito.InjectMock;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
-import org.jeasy.random.EasyRandom;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
@@ -42,26 +41,24 @@ class BookingServiceTest {
     @RestClient
     BrokerService brokerService;
 
-    private final EasyRandom easyRandom = new EasyRandom();
-
     @Test
     void testGetHotelDetails() {
         // Arranges
-        final var brokerHotel = easyRandom.nextObject(BrokerHotel.class);
+        final var brokerHotel = nextBrokerHotel();
         final var fee = BigDecimal.ONE;
         when(brokerService.getHotelDetails(anyInt())).thenReturn(brokerHotel);
         when(feeService.calculateFee(any(), anyLong())).thenReturn(fee);
 
         // Act
-        final var hotel = bookingService.getHotelDetails(1).orElse(Hotel.builder().build());
+        final var hotel = bookingService.getHotelDetails(1).orElse(this.emptyHotel());
 
         // Asserts
         assertAll("hotel-details",
-                        () -> assertThat(hotel.getId(), is(brokerHotel.getId())),
-                        () -> assertThat(hotel.getCityName(), is(brokerHotel.getCityName())),
-                        () -> assertFalse(hotel.getRooms().isEmpty()),
+                        () -> assertThat(hotel.id(), is(brokerHotel.id())),
+                        () -> assertThat(hotel.cityName(), is(brokerHotel.cityName())),
+                        () -> assertFalse(hotel.rooms().isEmpty()),
                         () -> verify(brokerService).getHotelDetails(anyInt()),
-                        () -> verify(feeService, times(brokerHotel.getRooms().size() * 2))
+                        () -> verify(feeService, times(brokerHotel.rooms().size() * 2))
                                         .calculateFee(any(), anyLong())
         );
     }
@@ -69,8 +66,7 @@ class BookingServiceTest {
     @Test
     void testFindHotels() {
         // Arranges
-        final var brokerHotels = easyRandom.objects(BrokerHotel.class, 2)
-                        .collect(Collectors.toList());
+        final var brokerHotels = List.of(nextBrokerHotel(), nextBrokerHotel());
         final var fee = BigDecimal.ONE;
         when(brokerService.findHotelsByCity(anyInt())).thenReturn(Set.copyOf(brokerHotels));
         when(feeService.calculateFee(any(), anyLong())).thenReturn(fee);
@@ -86,7 +82,7 @@ class BookingServiceTest {
                         () -> assertThat(hotels.size(), is(2)),
                         () -> verify(brokerService).findHotelsByCity(anyInt()),
                         () -> verify(feeService, times(brokerHotels.size() *
-                                        brokerHotels.stream().map(BrokerHotel::getRooms).mapToInt(List::size).sum()))
+                                        brokerHotels.stream().map(BrokerHotel::rooms).mapToInt(List::size).sum()))
                                         .calculateFee(any(), anyLong())
         );
     }
@@ -119,5 +115,9 @@ class BookingServiceTest {
 
         // Asserts
         assertTrue(hotel.isEmpty());
+    }
+
+    private Hotel emptyHotel() {
+        return new Hotel(1, "", "", Collections.emptyList());
     }
 }

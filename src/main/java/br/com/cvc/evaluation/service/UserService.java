@@ -9,11 +9,12 @@ import br.com.cvc.evaluation.domain.Profile;
 import br.com.cvc.evaluation.domain.User;
 import br.com.cvc.evaluation.service.provider.UserProvider;
 import io.quarkus.elytron.security.common.BcryptUtil;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 @ApplicationScoped
 public class UserService {
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
     @Inject
     UserProvider userProvider;
 
@@ -22,11 +23,9 @@ public class UserService {
         // o ideal é ter um banco de dados para consultar o usuário
         if (login.equals(this.userProvider.login())) {
             log.info("User {} found", login);
-            return Optional.of(User.builder()
-                            .username(login)
-                            .password(BcryptUtil.bcryptHash(this.userProvider.passwd()))
-                            .profiles(Set.of(Profile.builder().id(0).name("user").build()))
-                            .build());
+            return Optional.of(new User(login,
+                            BcryptUtil.bcryptHash(this.userProvider.passwd()),
+                            Set.of(new Profile(0, "user"))));
         }
 
         log.info("User {} not found", login);

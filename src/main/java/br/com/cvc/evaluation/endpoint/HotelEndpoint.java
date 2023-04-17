@@ -7,7 +7,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 
-import br.com.cvc.evaluation.domain.Hotel;
 import br.com.cvc.evaluation.service.BookingService;
 
 @Path("/hotels")
@@ -19,8 +18,12 @@ public class HotelEndpoint {
     @RolesAllowed({"user"})
     @Path("/{id}")
     public Response find(@PathParam("id") final Integer id) {
-        return Response.ok(service.getHotelDetails(id).orElse(Hotel.builder().build()))
-                        .build();
+        final var result = service.getHotelDetails(id);
+
+        if (result.isEmpty())
+            return Response.noContent().build();
+
+        return Response.ok(result.get()).build();
     }
 
 }

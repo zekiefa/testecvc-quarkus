@@ -5,11 +5,12 @@ import javax.inject.Inject;
 import java.math.BigDecimal;
 
 import br.com.cvc.evaluation.service.provider.FeeProvider;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 @ApplicationScoped
 public class FeeService {
+    private static final Logger log = LoggerFactory.getLogger(FeeService.class);
     // o ideal é que a comissão seja parametrizada via banco de dados
     // ou disponibilizada por um serviço externo
     @Inject
