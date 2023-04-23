@@ -32,7 +32,7 @@ class BookingEndpointTest {
                         .contentType(ContentType.JSON)
                         .accept(ContentType.JSON)
                         .log().all()
-                        .when().get(String.format("/booking/55/%s/%s/1/1", checkin, checkout))
+                        .when().get(String.format("/api/v1/booking/55/%s/%s/1/1", checkin, checkout))
                         .then()
                         .assertThat()
                         .statusCode(HttpStatus.SC_OK)
@@ -48,7 +48,7 @@ class BookingEndpointTest {
                         .accept(ContentType.JSON)
                         .log().all()
                         .when()
-                        .get("/booking/1/2/3/1/1")
+                        .get("/api/v1/booking/1/2/3/1/1")
                         .then()
                         .assertThat()
                         .statusCode(HttpStatus.SC_UNAUTHORIZED);

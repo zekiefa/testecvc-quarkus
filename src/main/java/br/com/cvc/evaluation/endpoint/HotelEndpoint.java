@@ -9,7 +9,7 @@ import javax.ws.rs.core.Response;
 
 import br.com.cvc.evaluation.service.BookingService;
 
-@Path("/hotels")
+@Path("/api/v1/hotels")
 public class HotelEndpoint {
     @Inject
     BookingService service;

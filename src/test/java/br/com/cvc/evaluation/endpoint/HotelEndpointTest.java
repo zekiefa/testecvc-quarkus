@@ -28,7 +28,7 @@ public class HotelEndpointTest {
                                         tokenBuilder.createJWT("usuario", 86400000L))
                         .contentType(ContentType.JSON)
                         .accept(ContentType.JSON)
-                        .log().all().when().get(String.format("/hotels/%d", idHotel))
+                        .log().all().when().get(String.format("/api/v1/hotels/%d", idHotel))
                         .then()
                         .statusCode(HttpStatus.SC_OK)
                         .extract()
@@ -48,7 +48,7 @@ public class HotelEndpointTest {
                         .accept(ContentType.JSON)
                         .log().all()
                         .when()
-                        .get("/hotels/1")
+                        .get("/api/v1/hotels/1")
                         .then()
                         .assertThat()
                         .statusCode(HttpStatus.SC_UNAUTHORIZED);

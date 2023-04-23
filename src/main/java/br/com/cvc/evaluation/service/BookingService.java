@@ -15,6 +15,8 @@ import br.com.cvc.evaluation.broker.dto.BrokerHotelRoom;
 import br.com.cvc.evaluation.domain.Hotel;
 import br.com.cvc.evaluation.domain.PriceDetail;
 import br.com.cvc.evaluation.domain.Room;
+import br.com.cvc.evaluation.exceptions.BookingPeriodInvalidException;
+import br.com.cvc.evaluation.exceptions.HotelNotFoundException;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +42,10 @@ public class BookingService {
     }
 
     private Long calculatePeriod(final LocalDate checkin, final LocalDate checkout) {
+        if (checkout.isBefore(checkin)) {
+            throw new BookingPeriodInvalidException("Checkin must be before checkout");
+        }
+
         log.info("Calculating period: checking {}, checkout {}", checkin, checkout);
         return checkin.until(checkout, ChronoUnit.DAYS);
     }
@@ -89,8 +95,7 @@ public class BookingService {
             return Optional.of(this.calculateBooking(hotelDetails, ONE_DAY, ONE_PAX, ONE_PAX));
         }
 
-        log.info("Hotel {} not found", codeHotel);
-        return Optional.empty();
+        throw new HotelNotFoundException("Hotel not found");
     }
 
     public List<Hotel> findHotels(final Integer cityCode, final LocalDate checkin, final LocalDate checkout,

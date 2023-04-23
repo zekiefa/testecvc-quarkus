@@ -215,6 +215,7 @@
               <excludes>
                 <exclude>**/domain/*</exclude>
                 <exclude>**/broker/dto/*</exclude>
+                <exclude>**/exceptions/*</exclude>
               </excludes>
             </configuration>
           </execution>

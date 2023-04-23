@@ -11,7 +11,7 @@ import java.time.format.DateTimeFormatter;
 
 import br.com.cvc.evaluation.service.BookingService;
 
-@Path("/booking")
+@Path("/api/v1/booking")
 public class BookingEndpoint {
     private static final String DATE_FORMAT = "yyyy-MM-dd";
 

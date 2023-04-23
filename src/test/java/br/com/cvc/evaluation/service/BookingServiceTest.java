@@ -5,6 +5,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -24,6 +25,8 @@ import java.util.Set;
 import br.com.cvc.evaluation.broker.BrokerService;
 import br.com.cvc.evaluation.broker.dto.BrokerHotel;
 import br.com.cvc.evaluation.domain.Hotel;
+import br.com.cvc.evaluation.exceptions.BookingPeriodInvalidException;
+import br.com.cvc.evaluation.exceptions.HotelNotFoundException;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.mockito.InjectMock;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -61,6 +64,16 @@ class BookingServiceTest {
                         () -> verify(feeService, times(brokerHotel.rooms().size() * 2))
                                         .calculateFee(any(), anyLong())
         );
+    }
+
+    @Test
+    void testGetNoHotelDetails() {
+        // Arranges
+        when(brokerService.getHotelDetails(anyInt())).thenReturn(null);
+
+        // Act | Assert
+        assertThrows(HotelNotFoundException.class,
+                        () -> bookingService.getHotelDetails(1));
     }
 
     @Test
@@ -104,17 +117,14 @@ class BookingServiceTest {
     }
 
     @Test
-    void testGetEmptyHotelDetails() {
+    void testFindHotelsWithInvalidPeriod() {
         // Arranges
-        final var fee = BigDecimal.ONE;
-        when(brokerService.getHotelDetails(anyInt())).thenReturn(null);
-        when(feeService.calculateFee(any(), anyLong())).thenReturn(fee);
+        final var checkin = LocalDate.now();
+        final var checkout = checkin.minusDays(DayOfWeek.values().length);
 
-        // Act
-        final var hotel = bookingService.getHotelDetails(1);
-
-        // Asserts
-        assertTrue(hotel.isEmpty());
+        // Act | Assert
+        assertThrows(BookingPeriodInvalidException.class,
+                        () -> bookingService.findHotels(27, checkin, checkout, 3, 2));
     }
 
     private Hotel emptyHotel() {
