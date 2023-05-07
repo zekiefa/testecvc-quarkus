@@ -5,7 +5,6 @@ import java.time.format.DateTimeFormatter;
 
 import br.com.cvc.evaluation.service.BookingService;
 import jakarta.annotation.security.RolesAllowed;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -15,8 +14,11 @@ import jakarta.ws.rs.core.Response;
 public class BookingEndpoint {
     private static final String DATE_FORMAT = "yyyy-MM-dd";
 
-    @Inject
-    BookingService service;
+    private final BookingService service;
+
+    public BookingEndpoint(final BookingService service) {
+        this.service = service;
+    }
 
     @GET
     @RolesAllowed({"user"})

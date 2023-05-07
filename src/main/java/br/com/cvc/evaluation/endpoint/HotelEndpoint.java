@@ -2,7 +2,6 @@ package br.com.cvc.evaluation.endpoint;
 
 import br.com.cvc.evaluation.service.BookingService;
 import jakarta.annotation.security.RolesAllowed;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -10,8 +9,11 @@ import jakarta.ws.rs.core.Response;
 
 @Path("/api/v1/hotels")
 public class HotelEndpoint {
-    @Inject
-    BookingService service;
+    private final BookingService service;
+
+    public HotelEndpoint(final BookingService service) {
+        this.service = service;
+    }
 
     @GET
     @RolesAllowed({"user"})

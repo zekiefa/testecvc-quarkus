@@ -8,15 +8,17 @@ import br.com.cvc.evaluation.domain.User;
 import br.com.cvc.evaluation.service.provider.UserProvider;
 import io.quarkus.elytron.security.common.BcryptUtil;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @ApplicationScoped
 public class UserService {
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
-    @Inject
-    UserProvider userProvider;
+    private final UserProvider userProvider;
+
+    public UserService(final UserProvider userProvider) {
+        this.userProvider = userProvider;
+    }
 
     public Optional<User> findByLogin(final String login) {
         log.info("Finding user by login {}", login);

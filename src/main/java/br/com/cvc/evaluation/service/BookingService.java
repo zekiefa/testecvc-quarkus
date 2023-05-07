@@ -16,7 +16,6 @@ import br.com.cvc.evaluation.domain.Room;
 import br.com.cvc.evaluation.exceptions.BookingPeriodInvalidException;
 import br.com.cvc.evaluation.exceptions.HotelNotFoundException;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,12 +26,15 @@ public class BookingService {
     private static final Long ONE_DAY = Long.valueOf("1");
     private static final Integer ONE_PAX = 1;
 
-    @Inject
-    @RestClient
-    BrokerService brokerService;
+    private final BrokerService brokerService;
 
-    @Inject
-    FeeService feeService;
+    private final FeeService feeService;
+
+    public BookingService(@RestClient final BrokerService brokerService,
+                    final FeeService feeService) {
+        this.brokerService = brokerService;
+        this.feeService = feeService;
+    }
 
     private BigDecimal calculateTotalPrice(final BigDecimal paxPrice, final Long days) {
         log.info("Calculating total price: pax price {} for {} days", paxPrice, days);

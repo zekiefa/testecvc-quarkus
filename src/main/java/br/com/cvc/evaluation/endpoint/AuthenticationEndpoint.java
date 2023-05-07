@@ -11,7 +11,6 @@ import br.com.cvc.evaluation.service.TokenService;
 import br.com.cvc.evaluation.service.UserService;
 import io.quarkus.elytron.security.common.BcryptUtil;
 import jakarta.enterprise.context.RequestScoped;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Response;
@@ -19,10 +18,14 @@ import jakarta.ws.rs.core.Response;
 @Path("/auth")
 @RequestScoped
 public class AuthenticationEndpoint {
-    @Inject
-    TokenService tokenService;
-    @Inject
-    UserService userService;
+    private final TokenService tokenService;
+    private final UserService userService;
+
+    public AuthenticationEndpoint(final TokenService tokenService,
+                    final UserService userService) {
+        this.tokenService = tokenService;
+        this.userService = userService;
+    }
 
     @POST
     public Response login(final Login loginAuth) {
