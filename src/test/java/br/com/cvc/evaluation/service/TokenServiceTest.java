@@ -2,12 +2,12 @@ package br.com.cvc.evaluation.service;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-import javax.inject.Inject;
 import java.util.Set;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.jwt.auth.principal.DefaultJWTTokenParser;
 import io.smallrye.jwt.auth.principal.JWTAuthContextInfo;
+import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest

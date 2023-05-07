@@ -4,18 +4,17 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
-import static javax.json.Json.createParser;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import javax.json.JsonValue;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
 import java.util.Collections;
 import java.util.Map;
 
+import br.com.cvc.evaluation.broker.dto.BrokerHotel;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
+import io.vertx.core.spi.JsonFactory;
 
 public class WireMockExtensions implements QuarkusTestResourceLifecycleManager {
     private static final String HOTELS_JSON_FILE = "/hotels.json";
@@ -45,21 +44,18 @@ public class WireMockExtensions implements QuarkusTestResourceLifecycleManager {
     private void stubHotels() {
         try (InputStream is = WireMockExtensions.class.getResourceAsStream(HOTELS_JSON_FILE)) {
             assert is != null;
-            String hotels = new String(is.readAllBytes());
+            final var hotels = new String(is.readAllBytes());
 
             // Stub for full list of hotels:
             wireMockServer.stubFor(get(urlPathMatching(BASE_PATH.concat("/avail/([0-9]*)")))
                             .willReturn(okJson(hotels)));
 
             // Stub for each hotel
-            try (StringReader sr = new StringReader(hotels); final var parser = createParser(sr)) {
-                parser.next();
-                for (JsonValue hotel : parser.getArray()) {
-                    final var id = hotel.asJsonObject().getInt("id");
-
-                    wireMockServer.stubFor(get(urlEqualTo(String.format(BASE_PATH.concat("/%d"), id)))
-                                    .willReturn(okJson(hotel.toString())));
-                }
+            final var codec = JsonFactory.load().codec();
+            final var brokerHotels = codec.fromString(hotels, BrokerHotel[].class);
+            for (final BrokerHotel hotel : brokerHotels) {
+                wireMockServer.stubFor(get(urlEqualTo(String.format(BASE_PATH.concat("/%d"), hotel.id())))
+                                .willReturn(okJson(codec.toString(hotel))));
             }
         } catch (IOException e) {
             fail("Could not configure Wiremock server. Caused by: " + e.getMessage());

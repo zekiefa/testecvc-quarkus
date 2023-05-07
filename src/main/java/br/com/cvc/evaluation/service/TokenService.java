@@ -1,12 +1,12 @@
 package br.com.cvc.evaluation.service;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import java.time.Instant;
 import java.util.Set;
 
 import br.com.cvc.evaluation.service.provider.JwtProvider;
 import io.smallrye.jwt.build.Jwt;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -1,10 +1,10 @@
 package br.com.cvc.evaluation.service;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import java.math.BigDecimal;
 
 import br.com.cvc.evaluation.service.provider.FeeProvider;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

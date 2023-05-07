@@ -14,14 +14,14 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-    <quarkus.platform.version>2.16.6.Final</quarkus.platform.version>
+    <quarkus.platform.version>3.0.1.Final</quarkus.platform.version>
     <surefire-plugin.version>3.0.0-M7</surefire-plugin.version>
     <skipITs>true</skipITs>
-    <logback-classic.version>1.2.11</logback-classic.version>
+    <logback-classic.version>1.4.7</logback-classic.version>
     <wiremock.version>2.32.0</wiremock.version>
     <hamcrest.version>2.2</hamcrest.version>
     <easy-random-core.version>5.0.0</easy-random-core.version>
-    <quarkus-logging-logback.version>0.13.0</quarkus-logging-logback.version>
+    <quarkus-logging-logback.version>1.0.0</quarkus-logging-logback.version>
     <jacoco-maven-plugin.version>0.8.8</jacoco-maven-plugin.version>
   </properties>
 
@@ -91,6 +91,12 @@
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-junit5-mockito</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.mockito</groupId>
+          <artifactId>mockito-subclass</artifactId>
+        </exclusion>
+      </exclusions>
       <scope>test</scope>
     </dependency>
     <dependency>

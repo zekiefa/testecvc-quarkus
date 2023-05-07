@@ -2,8 +2,6 @@ package br.com.cvc.evaluation.endpoint;
 
 import static io.restassured.RestAssured.given;
 
-import javax.inject.Inject;
-
 import br.com.cvc.evaluation.domain.Login;
 import br.com.cvc.evaluation.domain.Token;
 import br.com.cvc.evaluation.extensions.WireMockExtensions;
@@ -12,6 +10,7 @@ import br.com.cvc.evaluation.service.UserService;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
+import jakarta.inject.Inject;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 
