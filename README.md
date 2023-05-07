@@ -14,6 +14,8 @@
 
 ### Instructions
 - Clone the project
+- Build the application `$ mvn clean install`
+- Alternatively build the native executable `$ mvn install -Dnative`
 - Run the project: `$ mvn quarkus:dev -DdebugHost=0.0.0.0`
 
 ### About the application
