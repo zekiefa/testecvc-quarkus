@@ -2,7 +2,7 @@
 
 ### Architecture
 - Java ~~11~~ 17
-- Quarkus 2.16.6
+- Quarkus 3.0.1.Final
 - ~~[Lombok](https://projectlombok.org) to avoid boilerplate code~~
 - ~~[Mapstruct](https://mapstruct.org) for conversions between domains~~
 - [SL4J](https://www.slf4j.org/manual.html) for logging
@@ -39,6 +39,7 @@ curl --request GET \
 
 ### References
 - [Getting Started With Quarkus](https://www.section.io/engineering-education/how-to-work-with-lombok-on-quarkus)
+- [Migration Guide 3.0](https://github.com/quarkusio/quarkus/wiki/Migration-Guide-3.0)
 - [Quarkus Guide: Using JWT RBAC](https://quarkus.io/guides/security-jwt#adding-a-public-key)
 - [Quarkus Guide: Build, Sign and Encrypt JSON Web Tokens](https://quarkus.io/guides/security-jwt-build)
 - [Authentication and Authorization using JWT Token and Roles-Based Access Control | Quarkus Tutorial](https://www.youtube.com/watch?v=0FVJlSJR0Zo&t=3s)
