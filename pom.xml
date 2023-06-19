@@ -23,6 +23,7 @@
     <easy-random-core.version>5.0.0</easy-random-core.version>
     <quarkus-logging-logback.version>1.0.0</quarkus-logging-logback.version>
     <jacoco-maven-plugin.version>0.8.8</jacoco-maven-plugin.version>
+    <quarkus-resteasy-problem.version>3.0.0</quarkus-resteasy-problem.version>
   </properties>
 
   <dependencyManagement>
@@ -82,6 +83,11 @@
       <groupId>io.quarkiverse.logging.logback</groupId>
       <artifactId>quarkus-logging-logback</artifactId>
       <version>${quarkus-logging-logback.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.tietoevry.quarkus</groupId>
+      <artifactId>quarkus-resteasy-problem</artifactId>
+      <version>${quarkus-resteasy-problem.version}</version>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
