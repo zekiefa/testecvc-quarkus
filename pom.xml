@@ -7,23 +7,23 @@
   <version>1.0.0-SNAPSHOT</version>
 
   <properties>
-    <compiler-plugin.version>3.10.1</compiler-plugin.version>
+    <compiler-plugin.version>3.13.0</compiler-plugin.version>
     <failsafe.useModulePath>false</failsafe.useModulePath>
-    <maven.compiler.release>17</maven.compiler.release>
+    <maven.compiler.release>21</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-    <quarkus.platform.version>3.0.1.Final</quarkus.platform.version>
-    <surefire-plugin.version>3.0.0-M7</surefire-plugin.version>
+    <quarkus.platform.version>3.12.3</quarkus.platform.version>
+    <surefire-plugin.version>3.2.5</surefire-plugin.version>
     <skipITs>true</skipITs>
     <logback-classic.version>1.4.7</logback-classic.version>
     <wiremock.version>2.32.0</wiremock.version>
     <hamcrest.version>2.2</hamcrest.version>
     <easy-random-core.version>5.0.0</easy-random-core.version>
-    <quarkus-logging-logback.version>1.0.0</quarkus-logging-logback.version>
-    <jacoco-maven-plugin.version>0.8.8</jacoco-maven-plugin.version>
-    <quarkus-resteasy-problem.version>3.0.0</quarkus-resteasy-problem.version>
+    <quarkus-logging-logback.version>1.1.2</quarkus-logging-logback.version>
+    <jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
+    <quarkus-resteasy-problem.version>3.9.0</quarkus-resteasy-problem.version>
   </properties>
 
   <dependencyManagement>
