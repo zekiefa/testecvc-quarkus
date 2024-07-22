@@ -1,8 +1,8 @@
 # Simple Quarkus Project
 
 ### Architecture
-- Java ~~11~~ 17
-- Quarkus 3.0.1.Final
+- Java ~~17~~ 21
+- Quarkus ~~3.0.1.Final~~ 3.12
 - ~~[Lombok](https://projectlombok.org) to avoid boilerplate code~~
 - ~~[Mapstruct](https://mapstruct.org) for conversions between domains~~
 - [SL4J](https://www.slf4j.org/manual.html) for logging
