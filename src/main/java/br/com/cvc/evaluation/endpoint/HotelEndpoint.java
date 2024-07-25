@@ -22,7 +22,7 @@ public class HotelEndpoint {
         final var result = service.getHotelDetails(id);
 
         if (result.isEmpty())
-            return Response.noContent().build();
+            return Response.status(Response.Status.NOT_FOUND).build();
 
         return Response.ok(result.get()).build();
     }

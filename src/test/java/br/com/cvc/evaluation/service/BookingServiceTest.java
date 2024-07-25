@@ -25,7 +25,6 @@ import br.com.cvc.evaluation.broker.BrokerService;
 import br.com.cvc.evaluation.broker.dto.BrokerHotel;
 import br.com.cvc.evaluation.domain.Hotel;
 import br.com.cvc.evaluation.exceptions.BookingPeriodInvalidException;
-import br.com.cvc.evaluation.exceptions.HotelNotFoundException;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -70,10 +69,10 @@ class BookingServiceTest {
     void testGetNoHotelDetails() {
         // Arranges
         when(brokerService.getHotelDetails(anyInt())).thenReturn(null);
-
-        // Act | Assert
-        assertThrows(HotelNotFoundException.class,
-                        () -> bookingService.getHotelDetails(1));
+        // Act
+        var hotelDetails = bookingService.getHotelDetails(1);
+        // Assert
+        assertTrue(hotelDetails.isEmpty());
     }
 
     @Test

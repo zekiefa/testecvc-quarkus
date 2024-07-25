@@ -9,15 +9,15 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
-@Path("/hotels")
+@Path("/")
 @ApplicationScoped
 @RegisterRestClient
 public interface BrokerService {
     @GET
-    @Path("/avail/{codeCity}")
+    @Path("cities/{codeCity}/hotels")
     Set<BrokerHotel> findHotelsByCity(@PathParam("codeCity") final Integer codeCity);
 
     @GET
-    @Path("/{codeHotel}")
+    @Path("hotels/{codeHotel}")
     BrokerHotel getHotelDetails(@PathParam("codeHotel") final Integer codeHotel);
 }

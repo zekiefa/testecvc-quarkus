@@ -18,7 +18,7 @@ import io.vertx.core.spi.JsonFactory;
 
 public class WireMockExtensions implements QuarkusTestResourceLifecycleManager {
     private static final String HOTELS_JSON_FILE = "/hotels.json";
-    private static final String BASE_PATH = "/hotels";
+    private static final String BASE_PATH = "/";
 
     private WireMockServer wireMockServer;
 
@@ -47,14 +47,14 @@ public class WireMockExtensions implements QuarkusTestResourceLifecycleManager {
             final var hotels = new String(is.readAllBytes());
 
             // Stub for full list of hotels:
-            wireMockServer.stubFor(get(urlPathMatching(BASE_PATH.concat("/avail/([0-9]*)")))
+            wireMockServer.stubFor(get(urlPathMatching(BASE_PATH.concat("cities/([0-9]*)/hotels")))
                             .willReturn(okJson(hotels)));
 
             // Stub for each hotel
             final var codec = JsonFactory.load().codec();
             final var brokerHotels = codec.fromString(hotels, BrokerHotel[].class);
             for (final BrokerHotel hotel : brokerHotels) {
-                wireMockServer.stubFor(get(urlEqualTo(String.format(BASE_PATH.concat("/%d"), hotel.id())))
+                wireMockServer.stubFor(get(urlEqualTo(String.format(BASE_PATH.concat("hotels/%d"), hotel.id())))
                                 .willReturn(okJson(codec.toString(hotel))));
             }
         } catch (IOException e) {

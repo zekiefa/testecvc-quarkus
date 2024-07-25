@@ -97,7 +97,7 @@ public class BookingService {
             return Optional.of(this.calculateBooking(hotelDetails, ONE_DAY, ONE_PAX, ONE_PAX));
         }
 
-        throw new HotelNotFoundException("Hotel not found");
+        return Optional.empty();
     }
 
     public List<Hotel> findHotels(final Integer cityCode, final LocalDate checkin, final LocalDate checkout,

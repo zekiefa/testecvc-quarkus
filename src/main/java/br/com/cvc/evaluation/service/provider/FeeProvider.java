@@ -7,4 +7,6 @@ import io.smallrye.config.ConfigMapping;
 @ConfigMapping(prefix = "booking")
 public interface FeeProvider {
     BigDecimal fee();
+
+
 }
