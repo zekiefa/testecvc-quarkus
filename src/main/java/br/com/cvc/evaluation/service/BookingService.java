@@ -13,6 +13,7 @@ import br.com.cvc.evaluation.domain.Hotel;
 import br.com.cvc.evaluation.domain.PriceDetail;
 import br.com.cvc.evaluation.domain.Room;
 import br.com.cvc.evaluation.exceptions.BookingPeriodInvalidException;
+import br.com.cvc.evaluation.exceptions.InvalidRequestException;
 import br.com.cvc.evaluation.pricing.PricingCalculator;
 import br.com.cvc.evaluation.service.provider.FeeProvider;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -26,6 +27,8 @@ public class BookingService {
     /** Convenção do detalhe do hotel: preço exibido para 1 adulto + 1 criança, 1 noite. */
     private static final int DETAIL_PAX = 1;
     private static final long DETAIL_NIGHTS = 1L;
+    /** Limite de sanidade para uma estadia; evita pedidos absurdos (ex.: 10 anos). */
+    private static final long MAX_NIGHTS = 30L;
 
     private final BrokerService brokerService;
     private final FeeProvider feeProvider;
@@ -37,13 +40,31 @@ public class BookingService {
     }
 
     private long calculatePeriod(final LocalDate checkin, final LocalDate checkout) {
+        if (checkin == null || checkout == null) {
+            throw new InvalidRequestException("checkin and checkout are required");
+        }
+
         // Checkout igual ao checkin significaria zero noites e preço zero.
         if (!checkout.isAfter(checkin)) {
             throw new BookingPeriodInvalidException("Checkout must be after checkin");
         }
 
-        log.info("Calculating period: checking {}, checkout {}", checkin, checkout);
-        return checkin.until(checkout, ChronoUnit.DAYS);
+        final var nights = checkin.until(checkout, ChronoUnit.DAYS);
+        if (nights > MAX_NIGHTS) {
+            throw new InvalidRequestException("Period must not exceed " + MAX_NIGHTS + " nights: " + nights);
+        }
+
+        log.info("Calculating period: checkin {}, checkout {} ({} nights)", checkin, checkout, nights);
+        return nights;
+    }
+
+    private void validateParty(final Integer adults, final Integer children) {
+        if (adults == null || adults < 1) {
+            throw new InvalidRequestException("adults must be at least 1: " + adults);
+        }
+        if (children == null || children < 0) {
+            throw new InvalidRequestException("children must not be negative: " + children);
+        }
     }
 
     private Room calculateRoom(final BrokerHotelRoom brokerHotelRoom, final long nights, final int adults,
@@ -93,6 +114,7 @@ public class BookingService {
     public List<Hotel> findHotels(final Integer cityCode, final LocalDate checkin, final LocalDate checkout,
                     final Integer adults, final Integer children) {
         log.info("Finding hotels: city {}, checkin {}, checkout {}", cityCode, checkin, checkout);
+        this.validateParty(adults, children);
         final var period = this.calculatePeriod(checkin, checkout);
         final var hotels = Optional.ofNullable(this.brokerService.findHotelsByCity(cityCode)).orElseGet(Set::of);
 
