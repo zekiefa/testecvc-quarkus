@@ -14,6 +14,9 @@
 
 ### Instructions
 - Clone the project
+- Generate the local JWT key pair: `$ ./generate_jwtkeys.sh`
+  - As chaves são segredos e **não estão no repositório** (`src/main/resources/jwt/` é ignorado).
+  - Para usar outro diretório/secret manager: `JWT_SIGN_KEY_LOCATION` e `JWT_VERIFY_KEY_LOCATION`.
 - Build the application `$ mvn clean install`
 - Alternatively build the native executable `$ mvn install -Dnative`
 - Run the project: `$ mvn quarkus:dev -DdebugHost=0.0.0.0`

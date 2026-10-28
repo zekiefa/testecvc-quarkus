@@ -2,10 +2,20 @@ quarkus:
   test:
     profile: test
 
+# Par de chaves exclusivo dos testes (versionado de propósito — ver jwt/README.md).
+# Mantém a suíte hermética: não depende das chaves de dev, que não estão no repositório.
 smallrye:
   jwt:
     sign:
-      key: jwt/private.key
+      key:
+        location: jwt/private.pem
+
+mp:
+  jwt:
+    verify:
+      issuer: testecvc
+      publickey:
+        location: jwt/public.pem
 
 usuario:
   login: "usuario"

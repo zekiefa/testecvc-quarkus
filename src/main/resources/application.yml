@@ -14,14 +14,16 @@ smallrye:
   jwt:
     sign:
       key:
-        location: jwt/privateKey.pem
+        # Chave privada fora do repositório. Em dev, gere com ./generate_jwtkeys.sh;
+        # em produção, aponte para o arquivo montado a partir do secret manager.
+        location: ${JWT_SIGN_KEY_LOCATION:jwt/privateKey.pem}
 
 mp:
   jwt:
     verify:
       issuer: testecvc
       publickey:
-        location: jwt/publicKey.pem
+        location: ${JWT_VERIFY_KEY_LOCATION:jwt/publicKey.pem}
 
 usuario:
   login: "usuario"
