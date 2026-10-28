@@ -1,7 +1,9 @@
 {
   "database": "dolt",
   "backend": "dolt",
-  "dolt_mode": "embedded",
-  "dolt_database": "tcq",
-  "project_id": "72f0812e-5c3d-4b24-94be-4e4d701d987e"
+  "dolt_mode": "server",
+  "dolt_server_host": "127.0.0.1",
+  "dolt_server_port": 3307,
+  "dolt_database": "testecvc_quarkus",
+  "project_id": "98dca413-6e61-4ba4-bb24-f8c530121eba"
 }
