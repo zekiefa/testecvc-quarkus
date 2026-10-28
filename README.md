@@ -39,6 +39,10 @@ curl --request GET \
 --header 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJ0ZXN0ZWN2YyIsInN1YiI6InVzdWFyaW8iLCJncm91cHMiOlsidXNlciJdLCJleHAiOjE2NjE5ODc4NDMsImlhdCI6MTY2MTkwMTQ0NCwianRpIjoiZTE0M2Y3Y2YtYWZkYi00NmRmLWE5ZWYtYTc2YjVhZjQwMTM2In0.S_NyIIyLxKxBZ0z_9-UXXe3OVQ1uDiMQKt1uhaICCkvL_UPRQ3zQ3Sy2s05pN7muRoyD-dqdhlRj_1IxgbUmvz1YfsbfRIrqNVZyL_nXqFr5ECcpi43PEKQ3ce1Qyy9GmqEE3e5vkn1Ja--AbsHeID8vRf-iqUCZXoUTwQBS9f3jLqFbfkxbLK67ek_b6nrgP27jBHP5Aqa3rHtpq8w7KcyUqKI_9_Kgtgxu1azwckv4DpdB3Z-sW768ME_heH8gMx5IopAKmidKxi7dThwy2vJivUxyTLM0pqb8H-0TnByBZKhoF8H9dEfdLYpdhPeOHrm4zCKjYph77x0i2R9snA'
 ```
 
+### Documentação
+- [Arquitetura (v0.1)](docs/arquitetura.md) — as-built, restrições, arquitetura-alvo e marcos M0–M4
+- [Decisões de arquitetura (ADRs)](docs/adr/README.md) — índice das decisões vigentes
+
 ### References
 - [Getting Started With Quarkus](https://www.section.io/engineering-education/how-to-work-with-lombok-on-quarkus)
 - [Migration Guide 3.0](https://github.com/quarkusio/quarkus/wiki/Migration-Guide-3.0)
