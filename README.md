@@ -36,11 +36,28 @@ curl --request POST \
 ```
 
 ### Access the application
+O token retornado pelo `/auth` expira (padrão: 24h), então guarde-o numa variável:
+
+```shell
+TOKEN=$(curl -s --request POST --url http://localhost:8080/auth \
+  --header 'Content-Type: application/json' \
+  --data '{"user":"usuario","passwd":"senha"}' | jq -r .token)
+
+curl --request GET \
+  --url http://localhost:8080/api/v1/hotels/6 \
+  --header "Authorization: Bearer $TOKEN"
+```
+
+Busca de hotéis por cidade (datas em ISO-8601; `checkout` precisa ser depois de `checkin`):
+
 ```shell
 curl --request GET \
---url http://localhost:8080/hotel/6 \
---header 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJ0ZXN0ZWN2YyIsInN1YiI6InVzdWFyaW8iLCJncm91cHMiOlsidXNlciJdLCJleHAiOjE2NjE5ODc4NDMsImlhdCI6MTY2MTkwMTQ0NCwianRpIjoiZTE0M2Y3Y2YtYWZkYi00NmRmLWE5ZWYtYTc2YjVhZjQwMTM2In0.S_NyIIyLxKxBZ0z_9-UXXe3OVQ1uDiMQKt1uhaICCkvL_UPRQ3zQ3Sy2s05pN7muRoyD-dqdhlRj_1IxgbUmvz1YfsbfRIrqNVZyL_nXqFr5ECcpi43PEKQ3ce1Qyy9GmqEE3e5vkn1Ja--AbsHeID8vRf-iqUCZXoUTwQBS9f3jLqFbfkxbLK67ek_b6nrgP27jBHP5Aqa3rHtpq8w7KcyUqKI_9_Kgtgxu1azwckv4DpdB3Z-sW768ME_heH8gMx5IopAKmidKxi7dThwy2vJivUxyTLM0pqb8H-0TnByBZKhoF8H9dEfdLYpdhPeOHrm4zCKjYph77x0i2R9snA'
+  --url "http://localhost:8080/api/v1/booking/55/2026-11-10/2026-11-13/2/1" \
+  --header "Authorization: Bearer $TOKEN"
 ```
+
+Erros de entrada: `401` para credencial inválida (sem revelar se o usuário existe), `400` para
+data fora do formato ISO-8601, período inválido ou contagem de hóspedes inválida.
 
 ### Documentação
 - [Arquitetura (v0.1)](docs/arquitetura.md) — as-built, restrições, arquitetura-alvo e marcos M0–M4
