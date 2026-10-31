@@ -31,6 +31,13 @@ target/
 mvnw
 mvnw.cmd
 .mvn/
-# Chaves JWT geradas localmente (segredos — nunca versionar)
+# Chaves JWT geradas locais (segredos — nunca versionar)
 src/main/resources/jwt/
 .m2repo/
+
+# Beads / Dolt files (adicionado pelo bd init)
+.dolt/
+*.db
+.beads-credential-key
+.beads/proxieddb/
+*.gate.lock*
