@@ -31,6 +31,13 @@ target/
 mvnw
 mvnw.cmd
 .mvn/
-# Chaves JWT geradas localmente (segredos — nunca versionar)
-src/main/resources/jwt/
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+*.db
+.beads-credential-key
+.beads/proxieddb/
+*.gate.lock*
+
+# Cache local do Maven quando se usa -Dmaven.repo.local apontando para o repo
 .m2repo/
