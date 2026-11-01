@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.stream.LongStream;
 
 import br.com.cvc.evaluation.catalog.BrokerCatalog;
+import br.com.cvc.evaluation.exceptions.RoomUnavailableException;
 import br.com.cvc.evaluation.inventory.dto.AvailabilityResponse;
 import br.com.cvc.evaluation.service.provider.BookingSettings;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -44,6 +45,32 @@ public class InventoryService {
     public void materialize(final Integer hotelId, final Integer roomId, final LocalDate checkIn,
                     final LocalDate checkOut) {
         this.repository.materialize(hotelId, roomId, this.nights(checkIn, checkOut), this.settings.defaultCapacity());
+    }
+
+    /**
+     * Materializa e reserva todas as noites do período na mesma transação. Se qualquer
+     * noite faltar capacidade, a exceção derruba tudo — inclusive a materialização.
+     */
+    @Transactional
+    public void reserve(final Integer hotelId, final Integer roomId, final LocalDate checkIn,
+                    final LocalDate checkOut) {
+        final var nights = this.nights(checkIn, checkOut);
+        this.repository.materialize(hotelId, roomId, nights, this.settings.defaultCapacity());
+        for (final var night : nights) {
+            if (!this.repository.hold(hotelId, roomId, night)) {
+                throw new RoomUnavailableException("Room " + roomId + " of hotel " + hotelId
+                                + " is no longer available on " + night);
+            }
+        }
+    }
+
+    /** Devolve as noites ao inventário (cancelamento de reserva ainda não usufruída). */
+    @Transactional
+    public void release(final Integer hotelId, final Integer roomId, final LocalDate checkIn,
+                    final LocalDate checkOut) {
+        for (final var night : this.nights(checkIn, checkOut)) {
+            this.repository.release(hotelId, roomId, night);
+        }
     }
 
     @Transactional

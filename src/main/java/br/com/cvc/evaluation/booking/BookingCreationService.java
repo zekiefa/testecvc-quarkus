@@ -9,6 +9,7 @@ import java.util.Objects;
 import br.com.cvc.evaluation.booking.dto.CreateBookingRequest;
 import br.com.cvc.evaluation.broker.BrokerService;
 import br.com.cvc.evaluation.catalog.BrokerCatalog;
+import br.com.cvc.evaluation.inventory.InventoryService;
 import br.com.cvc.evaluation.broker.dto.BrokerHotelRoom;
 import br.com.cvc.evaluation.exceptions.BookingPeriodInvalidException;
 import br.com.cvc.evaluation.exceptions.BrokerUnavailableException;
@@ -41,13 +42,16 @@ public class BookingCreationService {
 
     private final BookingRepository repository;
     private final BrokerCatalog catalog;
+    private final InventoryService inventory;
     private final BookingSettings settings;
 
     public BookingCreationService(final BookingRepository repository,
                     final BrokerCatalog catalog,
+                    final InventoryService inventory,
                     final BookingSettings settings) {
         this.repository = repository;
         this.catalog = catalog;
+        this.inventory = inventory;
         this.settings = settings;
     }
 
@@ -97,6 +101,9 @@ public class BookingCreationService {
                         this.settings.currency(),
                         quote.totalAmount(),
                         this.breakdown(request.checkIn(), nights, quote));
+
+        // Segura as noites na mesma transação: se o insert falhar, o hold volta atrás.
+        this.inventory.reserve(request.hotelId(), request.roomId(), request.checkIn(), request.checkOut());
 
         this.repository.persist(booking);
         BookingEvent.of(booking, "CREATED", Map.of("idempotencyKey", idempotencyKey, "subject", subject)).persist();

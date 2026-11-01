@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import br.com.cvc.evaluation.exceptions.BookingNotFoundException;
+import br.com.cvc.evaluation.inventory.InventoryService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
@@ -15,9 +16,11 @@ import jakarta.transaction.Transactional;
 public class BookingQueryService {
 
     private final BookingRepository repository;
+    private final InventoryService inventory;
 
-    public BookingQueryService(final BookingRepository repository) {
+    public BookingQueryService(final BookingRepository repository, final InventoryService inventory) {
         this.repository = repository;
+        this.inventory = inventory;
     }
 
     @Transactional
@@ -33,6 +36,9 @@ public class BookingQueryService {
 
         // Lança InvalidBookingStateException (409) se o estado não permitir cancelar.
         booking.transitionTo(BookingStatus.CANCELLED);
+
+        // Cancelamento devolve as noites: só chega aqui quem estava em CONFIRMED.
+        this.inventory.release(booking.hotelId, booking.roomId, booking.checkIn, booking.checkOut);
 
         BookingEvent.of(booking, "CANCELLED", Map.of("subject", subject)).persist();
         this.repository.flush();

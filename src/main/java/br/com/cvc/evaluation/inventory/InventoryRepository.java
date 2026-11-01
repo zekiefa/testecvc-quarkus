@@ -99,6 +99,11 @@ public class InventoryRepository {
         return available;
     }
 
+    /** Limpeza entre testes: o inventário é estado global do banco, não da reserva. */
+    public void deleteAll() {
+        this.entityManager.createNativeQuery("delete from room_inventory").executeUpdate();
+    }
+
     /** Usado nos testes para inspecionar o estado do inventário. */
     public int reserved(final Integer hotelId, final Integer roomId, final LocalDate night) {
         @SuppressWarnings("unchecked")
