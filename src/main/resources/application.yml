@@ -29,6 +29,8 @@ quarkus:
 booking:
   # Moeda do snapshot de preço
   currency: BRL
+  # Capacidade por quarto/noite ao materializar o inventário (premissa, ver ADR-002)
+  default-capacity: 1
   # Taxa em basis points (700 = 7,00%) — ADR-004.
   # TODO(PRODUTO): 700 é apenas o valor provisório de teste local; o valor comercial não foi definido.
   fee-bps: 700
