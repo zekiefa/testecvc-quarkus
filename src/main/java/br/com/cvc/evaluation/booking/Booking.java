@@ -134,4 +134,23 @@ public class Booking extends PanacheEntityBase {
         booking.nightlyBreakdown = List.copyOf(nightlyBreakdown);
         return booking;
     }
+
+    /** Dono da reserva — base da autorização por dono (ADR-003). */
+    public boolean isOwnedBy(final String subject) {
+        return userSubject != null && userSubject.equals(subject);
+    }
+
+    /**
+     * Aplica uma transição de estado validada pelo grafo de {@link BookingStatus}.
+     *
+     * @throws br.com.cvc.evaluation.exceptions.InvalidBookingStateException se a transição
+     *         não for permitida a partir do estado atual (resulta em 409)
+     */
+    public void transitionTo(final BookingStatus target) {
+        if (!this.status.canTransitionTo(target)) {
+            throw new br.com.cvc.evaluation.exceptions.InvalidBookingStateException(
+                            "Cannot transition booking from " + this.status + " to " + target);
+        }
+        this.status = target;
+    }
 }

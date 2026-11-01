@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import jakarta.inject.Inject;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.PersistenceException;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
@@ -95,6 +96,41 @@ class BookingPersistenceTest {
                         .getResultList();
 
         assertTrue(versions.contains("1"), "a migração V1 deve constar no histórico, veio: " + versions);
+    }
+
+    @Test
+    @Transactional
+    void incrementsVersionOnUpdate() {
+        final var booking = sample("key-version");
+        repository.persist(booking);
+        repository.flush();
+
+        final var initialVersion = booking.version;
+        booking.transitionTo(BookingStatus.CANCELLED);
+        repository.flush();
+
+        assertEquals(initialVersion + 1L, booking.version, "@Version deve subir a cada update");
+    }
+
+    @Test
+    @Transactional
+    void rejectsUpdateBasedOnStaleVersion() {
+        final var booking = sample("key-stale");
+        repository.persist(booking);
+        repository.flush();
+        repository.getEntityManager().clear();
+
+        final var loaded = repository.findBookingById(booking.id).orElseThrow();
+
+        // Simula outra transação que já mudou a linha (versão 0 -> 1).
+        repository.getEntityManager()
+                        .createNativeQuery("update booking set version = version + 1, status = 'CANCELLED' where id = :id")
+                        .setParameter("id", booking.id)
+                        .executeUpdate();
+
+        loaded.transitionTo(BookingStatus.CHECKED_IN);
+
+        assertThrows(OptimisticLockException.class, repository::flush);
     }
 
     private static Booking sample(final String idempotencyKey) {
