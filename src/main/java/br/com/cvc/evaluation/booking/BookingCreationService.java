@@ -8,10 +8,10 @@ import java.util.Objects;
 
 import br.com.cvc.evaluation.booking.dto.CreateBookingRequest;
 import br.com.cvc.evaluation.broker.BrokerService;
+import br.com.cvc.evaluation.catalog.BrokerCatalog;
 import br.com.cvc.evaluation.broker.dto.BrokerHotelRoom;
 import br.com.cvc.evaluation.exceptions.BookingPeriodInvalidException;
 import br.com.cvc.evaluation.exceptions.BrokerUnavailableException;
-import br.com.cvc.evaluation.exceptions.HotelNotFoundException;
 import br.com.cvc.evaluation.exceptions.IdempotencyConflictException;
 import br.com.cvc.evaluation.exceptions.InvalidRequestException;
 import br.com.cvc.evaluation.pricing.PricingCalculator;
@@ -19,9 +19,6 @@ import br.com.cvc.evaluation.pricing.RoomQuote;
 import br.com.cvc.evaluation.service.provider.BookingSettings;
 import jakarta.enterprise.context.ApplicationScoped;
 import io.quarkus.narayana.jta.QuarkusTransaction;
-import jakarta.ws.rs.ProcessingException;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,14 +40,14 @@ public class BookingCreationService {
     private static final long MAX_NIGHTS = 30L;
 
     private final BookingRepository repository;
-    private final BrokerService broker;
+    private final BrokerCatalog catalog;
     private final BookingSettings settings;
 
     public BookingCreationService(final BookingRepository repository,
-                    @RestClient final BrokerService broker,
+                    final BrokerCatalog catalog,
                     final BookingSettings settings) {
         this.repository = repository;
-        this.broker = broker;
+        this.catalog = catalog;
         this.settings = settings;
     }
 
@@ -86,7 +83,7 @@ public class BookingCreationService {
         }
 
         final var nights = this.validatePeriod(request.checkIn(), request.checkOut());
-        final var room = this.loadRoom(request);
+        final var room = this.catalog.room(request.hotelId(), request.roomId());
         final var quote = this.quote(room, request, nights);
 
         final var booking = Booking.create(idempotencyKey,
@@ -127,27 +124,6 @@ public class BookingCreationService {
             throw new InvalidRequestException("Period must not exceed " + MAX_NIGHTS + " nights: " + nights);
         }
         return nights;
-    }
-
-    private BrokerHotelRoom loadRoom(final CreateBookingRequest request) {
-        try {
-            final var hotel = this.broker.getHotelDetails(request.hotelId());
-            if (hotel == null || hotel.rooms() == null) {
-                throw new HotelNotFoundException("Hotel not found: " + request.hotelId());
-            }
-            return hotel.rooms().stream()
-                            .filter(room -> Objects.equals(room.roomID(), request.roomId()))
-                            .findFirst()
-                            .orElseThrow(() -> new HotelNotFoundException(
-                                            "Room " + request.roomId() + " not found in hotel " + request.hotelId()));
-        } catch (final WebApplicationException e) {
-            if (e.getResponse() != null && e.getResponse().getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
-                throw new HotelNotFoundException("Hotel not found: " + request.hotelId());
-            }
-            throw new BrokerUnavailableException("Broker failed: " + e.getMessage());
-        } catch (final ProcessingException e) {
-            throw new BrokerUnavailableException("Broker unreachable: " + e.getMessage());
-        }
     }
 
     private RoomQuote quote(final BrokerHotelRoom room, final CreateBookingRequest request, final long nights) {

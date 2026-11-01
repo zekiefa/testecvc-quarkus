@@ -1,6 +1,7 @@
 package br.com.cvc.evaluation.service.provider;
 
 import io.smallrye.config.ConfigMapping;
+import io.smallrye.config.WithDefault;
 
 /**
  * Configuração de negócio da reserva ({@code booking.*}).
@@ -20,4 +21,11 @@ public interface BookingSettings {
 
     /** Moeda do snapshot de preço, ISO-4217. */
     String currency();
+
+    /**
+     * Quantos quartos deste tipo existem por noite quando o inventário é materializado.
+     * Premissa nossa, não dado do broker (ADR-002): 1 por quarto/noite.
+     */
+    @WithDefault("1")
+    int defaultCapacity();
 }
