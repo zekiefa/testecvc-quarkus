@@ -220,8 +220,10 @@
             </configuration>
           </execution>
           <execution>
-            <id>report-it</id>
-            <phase>post-integration-test</phase>
+            <id>report-jacoco</id>
+            <!-- Na fase de testes: assim o job de testes do CI não precisa empacotar
+                 só para ter o relatório de cobertura. -->
+            <phase>test</phase>
             <goals>
               <goal>report</goal>
             </goals>

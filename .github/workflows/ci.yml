@@ -14,12 +14,71 @@ permissions:
   contents: read
 
 jobs:
+  # Build e testes são independentes (cada um compila o projeto) e rodam em
+  # paralelo: o tempo de parede passa a ser o maior dos dois, não a soma. A
+  # compilação extra é barata em runner público.
   build:
-    name: Build e testes
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Empacotar (sem testes)
+        run: mvn -B -ntp -DskipTests package
+
+      - name: Publicar o pacote
+        uses: actions/upload-artifact@v4
+        with:
+          name: quarkus-app
+          path: target/quarkus-app/
+          if-no-files-found: error
+
+  test:
+    name: Testes
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Testes
+        # O runner do GitHub tem Docker: os Dev Services sobem o Postgres real,
+        # igual ao ambiente local — nenhum mock de banco.
+        # O gate de cobertura (jacoco:check) e o relatório rodam nesta fase.
+        run: mvn -B -ntp test
+
+      - name: Publicar relatório do JaCoCo
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: target/jacoco-report/
+          if-no-files-found: ignore
+
+  # Terceiro job: só análise, consumindo a cobertura do job de testes.
+  sonar:
+    name: SonarQube Cloud
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     env:
-      # Sem o token, o passo do Sonar é pulado e o build continua verde.
+      # Sem o token os passos de análise são pulados e o job termina verde.
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
       - name: Checkout
@@ -35,24 +94,19 @@ jobs:
           java-version: '21'
           cache: maven
 
-      - name: Build e testes
-        # O runner do GitHub tem Docker: os Dev Services sobem o Postgres real,
-        # igual ao ambiente local — nenhum mock de banco.
-        run: mvn -B -ntp verify
-
-      - name: Publicar relatório do JaCoCo
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Baixar cobertura dos testes
+        if: env.SONAR_TOKEN != ''
+        uses: actions/download-artifact@v4
         with:
           name: jacoco-report
-          path: target/jacoco-report/
-          if-no-files-found: ignore
+          path: target/jacoco-report
 
-      - name: SonarQube Cloud
+      - name: Análise
         if: env.SONAR_TOKEN != ''
         run: >
-          mvn -B -ntp sonar:sonar
+          mvn -B -ntp -DskipTests compile sonar:sonar
           -Dsonar.host.url=https://sonarcloud.io
           -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }}
           -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }}
           -Dsonar.coverage.jacoco.xmlReportPaths=target/jacoco-report/jacoco.xml
+          -Dsonar.java.binaries=target/classes
