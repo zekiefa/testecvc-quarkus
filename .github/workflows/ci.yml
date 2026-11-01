@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Um build por branch/PR: um commit novo cancela o anterior em vez de enfileirar.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build e testes
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      # Sem o token, o passo do Sonar é pulado e o build continua verde.
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # histórico completo: o Sonar usa o blame para atribuir código novo
+          fetch-depth: 0
+
+      - name: Configurar JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Build e testes
+        # O runner do GitHub tem Docker: os Dev Services sobem o Postgres real,
+        # igual ao ambiente local — nenhum mock de banco.
+        run: mvn -B -ntp verify
+
+      - name: Publicar relatório do JaCoCo
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: target/jacoco-report/
+          if-no-files-found: ignore
+
+      - name: SonarQube Cloud
+        if: env.SONAR_TOKEN != ''
+        run: >
+          mvn -B -ntp sonar:sonar
+          -Dsonar.host.url=https://sonarcloud.io
+          -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }}
+          -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }}
+          -Dsonar.coverage.jacoco.xmlReportPaths=target/jacoco-report/jacoco.xml

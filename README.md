@@ -59,6 +59,21 @@ curl --request GET \
 Erros de entrada: `401` para credencial inválida (sem revelar se o usuário existe), `400` para
 data fora do formato ISO-8601, período inválido ou contagem de hóspedes inválida.
 
+### CI (GitHub Actions)
+- [`.github/workflows/ci.yml`](.github/workflows/ci.yml) — build e testes (`mvn -B verify`) em JDK 21; o runner do GitHub tem Docker, então os Dev Services sobem o Postgres real.
+- [`.github/workflows/codeql.yml`](.github/workflows/codeql.yml) — análise de segurança em push para `main`, PRs e semanalmente.
+- [`.github/dependabot.yml`](.github/dependabot.yml) — atualizações agrupadas (Quarkus junto, libs de teste junto).
+
+**Opcional — SonarQube Cloud** (gratuito em repositório público). Em *Settings → Secrets and variables → Actions*:
+
+| Nome | Tipo | Valor |
+|---|---|---|
+| `SONAR_TOKEN` | secret | token gerado em sonarcloud.io |
+| `SONAR_PROJECT_KEY` | variable | ex.: `zekiefa_testecvc-quarkus` |
+| `SONAR_ORGANIZATION` | variable | slug da organização no SonarCloud |
+
+Sem `SONAR_TOKEN` o passo do Sonar é pulado e o build continua verde.
+
 ### Documentação
 - [Arquitetura (v0.1)](docs/arquitetura.md) — as-built, restrições, arquitetura-alvo e marcos M0–M4
 - [Decisões de arquitetura (ADRs)](docs/adr/README.md) — índice das decisões vigentes
