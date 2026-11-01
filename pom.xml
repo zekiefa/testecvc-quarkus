@@ -156,6 +156,18 @@
   </dependencies>
 
   <build>
+    <pluginManagement>
+      <plugins>
+        <!-- Declarado (não executado) para que 'mvn sonar:sonar' resolva o prefixo
+             'sonar': sem isto o Maven só procura nos grupos padrão e falha com
+             NoPluginFoundForPrefixException. -->
+        <plugin>
+          <groupId>org.sonarsource.scanner.maven</groupId>
+          <artifactId>sonar-maven-plugin</artifactId>
+          <version>5.8.0.7211</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
     <plugins>
       <plugin>
         <groupId>${quarkus.platform.group-id}</groupId>
