@@ -1,6 +1,5 @@
 package br.com.cvc.evaluation.persistence;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -55,17 +54,18 @@ class DatabaseWiringTest {
     }
 
     @Test
-    void hibernateDoesNotManageTheSchema() throws SQLException {
-        // generation=none: nada além do controle do Flyway deve existir no schema.
+    void bookingTableComesFromFlyway() throws SQLException {
+        // O schema é do Flyway (V1). O Hibernate roda com schema-management.strategy=none,
+        // então nada além do que a migração criou deve existir.
         try (var connection = dataSource.getConnection();
                         var statement = connection.createStatement();
                         var result = statement.executeQuery(
-                                        "select count(*) from information_schema.tables "
-                                                        + "where table_schema = 'public' and table_name not like 'flyway%'")) {
+                                        "select to_regclass('public.booking') is not null, "
+                                                        + "(select count(*) from flyway_schema_history where success)")) {
 
             assertTrue(result.next());
-            assertEquals(0, result.getInt(1),
-                            "nenhuma tabela de aplicação deve existir antes da primeira migração");
+            assertTrue(result.getBoolean(1), "a tabela booking deve existir (criada pela V1)");
+            assertTrue(result.getInt(2) >= 1, "Flyway deve ter ao menos uma migração aplicada");
         }
     }
 }
