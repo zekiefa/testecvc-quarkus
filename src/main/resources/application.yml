@@ -1,4 +1,10 @@
 quarkus:
+  # Contrato publicado em /q/openapi (json ou yaml)
+  smallrye-openapi:
+    info-title: Testecvc Hotel Booking API
+    info-version: 1.0.0
+    info-description: Consulta de hoteis, disponibilidade e reservas com JWT.
+
   rest-client:
     br.com.cvc.evaluation.broker.BrokerService:
                 url: http://localhost:3000
