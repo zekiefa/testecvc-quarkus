@@ -97,6 +97,19 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-elytron-security</artifactId>
     </dependency>
+    <!-- Contrato e operação (M3): openapi, health e métricas -->
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-openapi</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-health</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-micrometer-registry-prometheus</artifactId>
+    </dependency>
     <dependency>
       <groupId>io.quarkiverse.logging.logback</groupId>
       <artifactId>quarkus-logging-logback</artifactId>
