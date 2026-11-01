@@ -1,0 +1,36 @@
+version: 2
+updates:
+  - package-ecosystem: maven
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps"
+    groups:
+      # Quarkus anda junto: atualizar uma extensão isolada quebra o BOM
+      quarkus:
+        patterns:
+          - "io.quarkus*"
+          - "io.quarkus.platform*"
+          - "io.quarkiverse*"
+      testes:
+        patterns:
+          - "org.junit*"
+          - "org.mockito*"
+          - "org.hamcrest*"
+          - "org.wiremock*"
+          - "com.github.tomakehurst*"
+          - "org.jeasy*"
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci"
+    groups:
+      actions:
+        patterns:
+          - "*"
