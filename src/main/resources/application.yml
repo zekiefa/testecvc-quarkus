@@ -15,6 +15,13 @@ quarkus:
   hibernate-orm:
     schema-management:
       strategy: none
+    # Colunas jsonb são mapeadas pelo Jackson compartilhado com o REST. O Quarkus falha
+    # por padrão nesse caso ("uses Quarkus' main formatting facilities"); aqui optamos
+    # conscientemente por permitir, já que é o mesmo ObjectMapper da aplicação.
+    # Valores possíveis: warn | fail | ignore.
+    mapping:
+      format:
+        global: ignore
 
   flyway:
     migrate-at-start: true
