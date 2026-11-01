@@ -41,6 +41,10 @@ public class Booking extends PanacheEntityBase {
     @Column(name = "idempotency_key", nullable = false, unique = true)
     public String idempotencyKey;
 
+    /** `sub` do JWT que criou a reserva; base da autorização por dono (ADR-003). */
+    @Column(name = "user_subject", nullable = false)
+    public String userSubject;
+
     @Column(name = "hotel_id", nullable = false)
     public Integer hotelId;
 
@@ -88,6 +92,7 @@ public class Booking extends PanacheEntityBase {
 
     /** Fábrica com as invariantes que não dependem do banco. */
     public static Booking create(final String idempotencyKey,
+                    final String userSubject,
                     final Integer hotelId,
                     final Integer roomId,
                     final LocalDate checkIn,
@@ -101,6 +106,9 @@ public class Booking extends PanacheEntityBase {
         if (idempotencyKey == null || idempotencyKey.isBlank()) {
             throw new IllegalArgumentException("idempotencyKey is required");
         }
+        if (userSubject == null || userSubject.isBlank()) {
+            throw new IllegalArgumentException("userSubject is required");
+        }
         if (!checkOut.isAfter(checkIn)) {
             throw new IllegalArgumentException("checkOut must be after checkIn");
         }
@@ -113,6 +121,7 @@ public class Booking extends PanacheEntityBase {
 
         final var booking = new Booking();
         booking.idempotencyKey = idempotencyKey;
+        booking.userSubject = userSubject;
         booking.hotelId = hotelId;
         booking.roomId = roomId;
         booking.checkIn = checkIn;
