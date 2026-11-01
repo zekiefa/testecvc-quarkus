@@ -11,9 +11,10 @@ quarkus:
       image-name: postgres:16-alpine
 
   # O schema é versionado por Flyway; o Hibernate nunca o altera.
+  # (quarkus.hibernate-orm.database.generation foi deprecated na 3.40)
   hibernate-orm:
-    database:
-      generation: none
+    schema-management:
+      strategy: none
 
   flyway:
     migrate-at-start: true
