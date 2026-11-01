@@ -14,16 +14,15 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-    <quarkus.platform.version>3.12.3</quarkus.platform.version>
+    <quarkus.platform.version>3.40.1.1</quarkus.platform.version>
     <surefire-plugin.version>3.2.5</surefire-plugin.version>
     <skipITs>true</skipITs>
     <logback-classic.version>1.4.7</logback-classic.version>
     <wiremock.version>3.0.1</wiremock.version>
     <hamcrest.version>2.2</hamcrest.version>
     <easy-random-core.version>5.0.0</easy-random-core.version>
-    <quarkus-logging-logback.version>1.1.2</quarkus-logging-logback.version>
+    <quarkus-logging-logback.version>1.2.0</quarkus-logging-logback.version>
     <jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
-    <quarkus-resteasy-problem.version>3.9.0</quarkus-resteasy-problem.version>
   </properties>
 
   <dependencyManagement>
@@ -102,11 +101,6 @@
       <groupId>io.quarkiverse.logging.logback</groupId>
       <artifactId>quarkus-logging-logback</artifactId>
       <version>${quarkus-logging-logback.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.tietoevry.quarkus</groupId>
-      <artifactId>quarkus-resteasy-problem</artifactId>
-      <version>${quarkus-resteasy-problem.version}</version>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
