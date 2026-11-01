@@ -1,6 +1,7 @@
 package br.com.cvc.evaluation.extensions;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
@@ -49,6 +50,10 @@ public class WireMockExtensions implements QuarkusTestResourceLifecycleManager {
             // Stub for full list of hotels:
             wireMockServer.stubFor(get(urlPathMatching(BASE_PATH.concat("cities/([0-9]*)/hotels")))
                             .willReturn(okJson(hotels)));
+
+            // Hotel que responde erro no broker: exercita o 503 da criação de reserva
+            wireMockServer.stubFor(get(urlEqualTo(BASE_PATH.concat("hotels/999")))
+                            .willReturn(aResponse().withStatus(500)));
 
             // Stub for each hotel
             final var codec = JsonFactory.load().codec();

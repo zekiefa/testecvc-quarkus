@@ -15,7 +15,7 @@ import br.com.cvc.evaluation.domain.Room;
 import br.com.cvc.evaluation.exceptions.BookingPeriodInvalidException;
 import br.com.cvc.evaluation.exceptions.InvalidRequestException;
 import br.com.cvc.evaluation.pricing.PricingCalculator;
-import br.com.cvc.evaluation.service.provider.FeeProvider;
+import br.com.cvc.evaluation.service.provider.BookingSettings;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.slf4j.Logger;
@@ -31,12 +31,12 @@ public class BookingService {
     private static final long MAX_NIGHTS = 30L;
 
     private final BrokerService brokerService;
-    private final FeeProvider feeProvider;
+    private final BookingSettings settings;
 
     public BookingService(@RestClient final BrokerService brokerService,
-                    final FeeProvider feeProvider) {
+                    final BookingSettings settings) {
         this.brokerService = brokerService;
-        this.feeProvider = feeProvider;
+        this.settings = settings;
     }
 
     private long calculatePeriod(final LocalDate checkin, final LocalDate checkout) {
@@ -77,7 +77,7 @@ public class BookingService {
                         adults,
                         children,
                         nights,
-                        this.feeProvider.feeBps());
+                        this.settings.feeBps());
 
         log.info("Room total price: {}", quote.totalAmount());
         return new Room(brokerHotelRoom.roomID(),

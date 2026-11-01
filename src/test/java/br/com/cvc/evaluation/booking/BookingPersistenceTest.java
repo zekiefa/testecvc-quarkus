@@ -103,7 +103,7 @@ class BookingPersistenceTest {
                         new NightlyRate("2026-11-10", new BigDecimal("963.00"), new BigDecimal("481.50")),
                         new NightlyRate("2026-11-11", new BigDecimal("963.00"), new BigDecimal("481.50")));
 
-        return Booking.create(idempotencyKey, 55, 1, checkIn, checkIn.plusDays(2), 1, 1, "BRL",
+        return Booking.create(idempotencyKey, "usuario", 55, 1, checkIn, checkIn.plusDays(2), 1, 1, "BRL",
                         new BigDecimal("2889.00"), breakdown);
     }
 }
