@@ -1,6 +1,7 @@
 package br.com.cvc.evaluation.booking;
 
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import br.com.cvc.evaluation.booking.dto.BookingResponse;
@@ -27,14 +28,17 @@ public class BookingResource {
 
     private final BookingCreationService service;
     private final BookingQueryService queryService;
+    private final BookingLifecycleService lifecycleService;
 
     /** Injetado (não é parâmetro): no JAX-RS, parâmetro sem anotação vira body. */
     @Inject
     JsonWebToken jwt;
 
-    public BookingResource(final BookingCreationService service, final BookingQueryService queryService) {
+    public BookingResource(final BookingCreationService service, final BookingQueryService queryService,
+                    final BookingLifecycleService lifecycleService) {
         this.service = service;
         this.queryService = queryService;
+        this.lifecycleService = lifecycleService;
     }
 
     @POST
@@ -69,6 +73,30 @@ public class BookingResource {
     @RolesAllowed("user")
     public Response cancel(@PathParam("id") final UUID id) {
         final var booking = this.queryService.cancel(id, this.jwt.getSubject());
+        return Response.ok(BookingResponse.from(booking)).build();
+    }
+
+    @POST
+    @Path("/{id}/check-in")
+    @RolesAllowed("user")
+    public Response checkIn(@PathParam("id") final UUID id) {
+        final var booking = this.lifecycleService.checkIn(id, this.jwt.getSubject(), LocalDate.now());
+        return Response.ok(BookingResponse.from(booking)).build();
+    }
+
+    @POST
+    @Path("/{id}/check-out")
+    @RolesAllowed("user")
+    public Response checkOut(@PathParam("id") final UUID id) {
+        final var booking = this.lifecycleService.checkOut(id, this.jwt.getSubject(), LocalDate.now());
+        return Response.ok(BookingResponse.from(booking)).build();
+    }
+
+    @POST
+    @Path("/{id}/no-show")
+    @RolesAllowed("user")
+    public Response noShow(@PathParam("id") final UUID id) {
+        final var booking = this.lifecycleService.noShow(id, this.jwt.getSubject(), LocalDate.now());
         return Response.ok(BookingResponse.from(booking)).build();
     }
 }

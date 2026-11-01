@@ -11,6 +11,7 @@ import br.com.cvc.evaluation.booking.dto.BookingResponse;
 import br.com.cvc.evaluation.booking.dto.CreateBookingRequest;
 import br.com.cvc.evaluation.extensions.TokenBuilder;
 import br.com.cvc.evaluation.extensions.WireMockExtensions;
+import br.com.cvc.evaluation.inventory.InventoryRepository;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.apache.http.HttpStatus;
@@ -36,10 +37,14 @@ class BookingQueryEndpointTest {
     @Inject
     BookingRepository repository;
 
+    @Inject
+    InventoryRepository inventory;
+
     @BeforeEach
     @Transactional
     void cleanUp() {
         Booking.deleteAll();
+        this.inventory.deleteAll();
     }
 
     @Test
