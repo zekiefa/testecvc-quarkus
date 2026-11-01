@@ -60,7 +60,12 @@ mp:
       publickey:
         location: ${JWT_VERIFY_KEY_LOCATION:jwt/publicKey.pem}
 
-usuario:
-  login: "usuario"
-  passwd: "senha"
+# Identidade agora vive no banco (migração V4). O seeder de desenvolvimento só existe
+# em dev/test; em produção o provisionamento vem de fora.
+"%dev":
+  app:
+    seed-user:
+      enabled: true
+      username: usuario
+      password: senha
 
