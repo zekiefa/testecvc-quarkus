@@ -3,6 +3,21 @@ quarkus:
     br.com.cvc.evaluation.broker.BrokerService:
                 url: http://localhost:3000
 
+  # Postgres real também em dev/test (ADR-001). Sem URL configurada, o Dev Services
+  # sobe um container automaticamente; em produção a URL vem de variáveis de ambiente.
+  datasource:
+    db-kind: postgresql
+    devservices:
+      image-name: postgres:16-alpine
+
+  # O schema é versionado por Flyway; o Hibernate nunca o altera.
+  hibernate-orm:
+    database:
+      generation: none
+
+  flyway:
+    migrate-at-start: true
+
 booking:
   # Taxa em basis points (700 = 7,00%) — ADR-004.
   # TODO(PRODUTO): 700 é apenas o valor provisório de teste local; o valor comercial não foi definido.
