@@ -2,16 +2,18 @@
 
 | Campo | Valor |
 |---|---|
-| Versão | **v0.1** |
+| Versão | **v0.2** |
 | Data | 2026-10-28 |
-| Status | Direções aprovadas (D1–D3); execução não iniciada |
+| Status | **M0 implementado e verificado** (`mvn clean verify`: 31 testes, 0 falhas). M1 é o próximo marco. |
 | Documentos relacionados | [ADR-001](adr/ADR-001-monolito-modular.md) · [ADR-002](adr/ADR-002-fonte-da-verdade.md) · [ADR-003](adr/ADR-003-idempotencia-e-maquina-de-estados.md) · [ADR-004](adr/ADR-004-semantica-da-taxa.md) |
 | Base analisada | commit `aca4b49` (Quarkus 3.12.3, Java 21) |
+| Versão anterior | [archive/arquitetura-v0.1.md](archive/arquitetura-v0.1.md) |
 
 ## Histórico de versões
 
 | Versão | Data | Mudança |
 |---|---|---|
+| v0.2 | 2026-10-28 | M0 concluído: `.gitattributes` + normalização de EOL, rotação das chaves JWT (fora do repositório, carregadas por env), `PricingCalculator` puro com taxa em basis points, validação de entrada e 401 no login. |
 | v0.1 | 2026-10-28 | Versão inicial: levantamento do *as-built*, restrições, arquitetura-alvo em 5 marcos e 4 ADRs. |
 
 ---
@@ -214,7 +216,7 @@ Cada marco é um PR revisável e reversível. Nenhum marco depende de infraestru
 
 | Marco | Conteúdo | Aceite (critério objetivo) | Sinal que autoriza o próximo |
 |---|---|---|---|
-| **M0 — Higiene** | `.gitattributes` + normalização de EOL; **rotacionar chaves JWT** (gerar novo par RS256, revogar o antigo, carga por env/secret); `PricingCalculator` + ADR-004 aplicado; validação de entrada; login 401 | `mvn verify` verde; teste de preço de 3 noites fecha com as diárias; `git status` limpo; nenhum segredo versionado e **par antigo revogado** | Build reproduzível e preço confiável |
+| **M0 — Higiene** ✅ **concluído** | `.gitattributes` + normalização de EOL; **rotacionar chaves JWT** (novo par RS256, chaves fora do repositório, carga por env); `PricingCalculator` + ADR-004 aplicado; validação de entrada; login 401 | `mvn verify` verde (**31 testes, 0 falhas**); teste de preço de 3 noites fecha com as diárias (4.333,50, não 4.050,00); `git status` limpo; nenhum segredo versionado | Build reproduzível e preço confiável |
 | **M1 — Reserva persistida** | Postgres + Panache + Flyway; tabelas `booking`/`booking_event`; `POST/GET/cancel`; idempotência; `@Version` | Duas requisições com a mesma `Idempotency-Key` → **1** reserva; `checkOut <= checkIn` → 400; transição inválida → 409; integração contra Postgres real (Dev Services) | Taxa de erro de escrita < 1% por 2 semanas; nenhuma reserva duplicada |
 | **M2 — Disponibilidade + check-in/out** | `room_inventory`; `GET /availability`; hold transacional; `check-in`/`check-out` | Teste concorrente (N threads, mesmo quarto/noite) **não** produz overbooking; check-in antes da data → 409 | Primeiro uso real de check-in/out, ou pedido de cancelamento com reembolso |
 | **M3 — Contrato e operação** | OpenAPI, health, métricas, CI, usuários em BD, logs com `traceId` | `/q/openapi` e `/q/health` respondem; PR sem CI verde não passa; latência p99 medida | p99 > 300 ms, ou broker instável, ou necessidade de cache |

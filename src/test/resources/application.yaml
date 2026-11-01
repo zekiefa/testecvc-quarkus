@@ -2,11 +2,28 @@ quarkus:
   test:
     profile: test
 
-smallrye:
-  jwt:
-    sign:
-      key: jwt/private.key
+# Par de chaves exclusivo dos testes (versionado de propósito — ver jwt/README.md).
+# Declarado com o prefixo %test de propósito: propriedades com perfil têm precedência
+# garantida sobre a config sem perfil do application.yml (main), então a suíte é
+# hermética independentemente da ordem em que os arquivos são carregados.
+"%test":
+  smallrye:
+    jwt:
+      sign:
+        key:
+          location: jwt/private.pem
+  mp:
+    jwt:
+      verify:
+        issuer: testecvc
+        publickey:
+          location: jwt/public.pem
 
 usuario:
   login: "usuario"
   passwd: "senha"
+
+# Taxa usada nos testes (700 = 7,00%, o mesmo valor de dev). Os testes verificam a
+# fórmula contra este valor, não o valor como regra de negócio (ver ADR-004).
+booking:
+  fee-bps: 700

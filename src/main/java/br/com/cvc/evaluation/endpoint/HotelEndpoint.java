@@ -1,5 +1,6 @@
 package br.com.cvc.evaluation.endpoint;
 
+import br.com.cvc.evaluation.exceptions.InvalidRequestException;
 import br.com.cvc.evaluation.service.BookingService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.ws.rs.GET;
@@ -19,6 +20,10 @@ public class HotelEndpoint {
     @RolesAllowed({"user"})
     @Path("/{id}")
     public Response find(@PathParam("id") final Integer id) {
+        if (id == null || id < 1) {
+            throw new InvalidRequestException("id must be a positive integer: " + id);
+        }
+
         final var result = service.getHotelDetails(id);
 
         if (result.isEmpty())

@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 class BookingEndpointTest {
     private static final String DATE_FORMAT = "yyyy-MM-dd";
     private final TokenBuilder tokenBuilder = new TokenBuilder();
+
     @Test
     void testFind() {
         // Arranges
@@ -52,5 +53,51 @@ class BookingEndpointTest {
                         .then()
                         .assertThat()
                         .statusCode(HttpStatus.SC_UNAUTHORIZED);
+    }
+
+    @Test
+    void testFindWithMalformedDate() {
+        // Antes: LocalDate.parse lançava DateTimeParseException -> 500.
+        given()
+                        .headers("Authorization", "Bearer " + tokenBuilder.createJWT("usuario", 86400000L))
+                        .contentType(ContentType.JSON)
+                        .accept(ContentType.JSON)
+                        .when()
+                        .get("/api/v1/booking/55/10-01-2026/2026-01-12/1/1")
+                        .then()
+                        .assertThat()
+                        .statusCode(HttpStatus.SC_BAD_REQUEST);
+    }
+
+    @Test
+    void testFindWithZeroNights() {
+        // checkout == checkin: zero noites, zero preço.
+        final var day = LocalDate.now().plusDays(2).format(DateTimeFormatter.ofPattern(DATE_FORMAT));
+
+        given()
+                        .headers("Authorization", "Bearer " + tokenBuilder.createJWT("usuario", 86400000L))
+                        .contentType(ContentType.JSON)
+                        .accept(ContentType.JSON)
+                        .when()
+                        .get(String.format("/api/v1/booking/55/%s/%s/1/1", day, day))
+                        .then()
+                        .assertThat()
+                        .statusCode(HttpStatus.SC_BAD_REQUEST);
+    }
+
+    @Test
+    void testFindWithoutAdults() {
+        final var checkin = LocalDate.now().plusDays(2).format(DateTimeFormatter.ofPattern(DATE_FORMAT));
+        final var checkout = LocalDate.now().plusDays(5).format(DateTimeFormatter.ofPattern(DATE_FORMAT));
+
+        given()
+                        .headers("Authorization", "Bearer " + tokenBuilder.createJWT("usuario", 86400000L))
+                        .contentType(ContentType.JSON)
+                        .accept(ContentType.JSON)
+                        .when()
+                        .get(String.format("/api/v1/booking/55/%s/%s/0/1", checkin, checkout))
+                        .then()
+                        .assertThat()
+                        .statusCode(HttpStatus.SC_BAD_REQUEST);
     }
 }
