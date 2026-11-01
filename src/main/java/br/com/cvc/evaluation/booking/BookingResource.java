@@ -1,6 +1,7 @@
 package br.com.cvc.evaluation.booking;
 
 import java.net.URI;
+import java.util.UUID;
 
 import br.com.cvc.evaluation.booking.dto.BookingResponse;
 import br.com.cvc.evaluation.booking.dto.CreateBookingRequest;
@@ -9,7 +10,9 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.HeaderParam;
+import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.jwt.JsonWebToken;
@@ -23,13 +26,15 @@ public class BookingResource {
     static final String IDEMPOTENCY_HEADER = "Idempotency-Key";
 
     private final BookingCreationService service;
+    private final BookingQueryService queryService;
 
     /** Injetado (não é parâmetro): no JAX-RS, parâmetro sem anotação vira body. */
     @Inject
     JsonWebToken jwt;
 
-    public BookingResource(final BookingCreationService service) {
+    public BookingResource(final BookingCreationService service, final BookingQueryService queryService) {
         this.service = service;
+        this.queryService = queryService;
     }
 
     @POST
@@ -49,5 +54,21 @@ public class BookingResource {
         }
         // Replay idempotente: mesma resposta, sem efeito colateral.
         return Response.ok(body).build();
+    }
+
+    @GET
+    @Path("/{id}")
+    @RolesAllowed("user")
+    public Response get(@PathParam("id") final UUID id) {
+        final var booking = this.queryService.getOwned(id, this.jwt.getSubject());
+        return Response.ok(BookingResponse.from(booking)).build();
+    }
+
+    @POST
+    @Path("/{id}/cancel")
+    @RolesAllowed("user")
+    public Response cancel(@PathParam("id") final UUID id) {
+        final var booking = this.queryService.cancel(id, this.jwt.getSubject());
+        return Response.ok(BookingResponse.from(booking)).build();
     }
 }
