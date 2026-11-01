@@ -18,7 +18,7 @@ import br.com.cvc.evaluation.pricing.PricingCalculator;
 import br.com.cvc.evaluation.pricing.RoomQuote;
 import br.com.cvc.evaluation.service.provider.BookingSettings;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.transaction.Transactional;
+import io.quarkus.narayana.jta.QuarkusTransaction;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -57,8 +57,28 @@ public class BookingCreationService {
     public record CreationResult(Booking booking, boolean created) {
     }
 
-    @Transactional
+    /**
+     * Cria a reserva ou devolve a existente.
+     *
+     * <p>A transação é programática porque a perderora da corrida precisa de uma transação
+     * <b>nova</b> para reler: a violação da constraint única inutiliza a transação corrente.</p>
+     */
     public CreationResult create(final CreateBookingRequest request, final String idempotencyKey,
+                    final String subject) {
+        try {
+            return QuarkusTransaction.requiringNew().call(() -> this.createOnce(request, idempotencyKey, subject));
+        } catch (final RuntimeException failure) {
+            final var winner = QuarkusTransaction.requiringNew()
+                            .call(() -> this.repository.findByIdempotencyKey(idempotencyKey));
+            if (winner.isPresent()) {
+                log.info("Concurrent creation for key {}; replaying the winner", idempotencyKey);
+                return this.replay(winner.get(), subject);
+            }
+            throw failure;
+        }
+    }
+
+    private CreationResult createOnce(final CreateBookingRequest request, final String idempotencyKey,
                     final String subject) {
         final var existing = this.repository.findByIdempotencyKey(idempotencyKey);
         if (existing.isPresent()) {
