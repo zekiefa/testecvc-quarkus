@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Status | Aceita — **valor da taxa em aberto** (7% é apenas valor provisório de teste local) |
+| Status | Aceita — valor definido: **5% (500 bps)** de markup ao hóspede, sobre adulto e criança |
 | Data | 2026-10-28 |
 | Decisores | Time de desenvolvimento |
 | Relacionados | [ADR-001](ADR-001-monolito-modular.md) · [ADR-003](ADR-003-idempotencia-e-maquina-de-estados.md) |
@@ -28,15 +28,16 @@ O cálculo é dinheiro: precisa ser determinístico, testável sem infraestrutur
    - `diáriaPorPax = round(tarifaPax × (1 + taxa), 2, HALF_UP)`
    - `totalReserva = Σ_diárias (diáriaAdulto × adultos + diáriaCriança × crianças) × noites`
    - **Invariante:** `totalReserva == Σ nightly_breakdown`, verificado em teste e (M2) em produção como asserção de sanidade.
-3. **Taxa configurada em basis points**, não em fração: `booking.fee-bps: 700` = **7,00%**. Esta decisão fixa a **unidade** (bps), não o número: o valor comercial segue em aberto e `700` é só o valor provisório de teste local. Elimina a ambiguidade de `0.70` (70% vs. 0,70%).
+3. **Taxa configurada em basis points**, não em fração: `booking.fee-bps: 500` = **5,00%**. Esta decisão fixa a **unidade** (bps); o **valor** foi definido pelo produto em 2026-11-03 (5% sobre tarifa base, adulto e criança). Elimina a ambiguidade de `0.70` (70% vs. 0,70%).
 4. **Arredondamento explícito**: `HALF_UP`, escala 2, moeda `BRL`; arredondar **por diária por pax** e então multiplicar, nunca arredondar o total no fim (evita divergência de centavo entre detalhe e total).
 5. **Snapshot na reserva**: `total_amount` + `nightly_breakdown` (JSONB) gravados na criação; recálculo posterior usa o snapshot, não a tarifa vigente.
 6. **Testes obrigatórios**: 1 noite, 3 noites, adultos/crianças combinados, tarifa com dízima, e o caso do exemplo acima (900/450, 3 noites) com valor esperado escrito à mão.
 
-> ⚠️ **Pendência (não bloqueia M0 nem M1):** o **valor comercial** da taxa e sua incidência (adulto e/ou criança) ainda não foram definidos. `7%` é apenas valor provisório de teste local, marcado no código como `TODO(PRODUTO)`. Consequências práticas:
-> (a) `fee-bps` fica parametrizado **por ambiente**, nunca embutido no código;
-> (b) nenhum teste trata `7%` como regra de negócio — o teste fixa a **fórmula**, com o valor declarado como fixture explícita;
-> (c) definir o número depois é mudança de configuração, não de código.
+> ✅ **Valor definido em 2026-11-03** (registrado como DEC-0001 no Super PM): **5% (500 bps)** de markup ao hóspede, sobre a tarifa base, incidindo sobre adulto **e** criança, fixo para todas as reservas. Os 7% anteriores eram valor provisório de teste e foram substituídos.
+>
+> O que continua valendo: `fee-bps` é parametrizado **por ambiente**; os testes fixam a **fórmula**, com o valor como fixture explícita; trocar o número segue sendo mudança de configuração.
+>
+> **Lacuna remanescente:** não é o número, é a **validação de mercado** — cotar 3 reservas equivalentes em concorrente e comparar o preço final (diferença acima de 10% reabre a decisão).
 
 ## Alternativas descartadas
 
@@ -66,7 +67,7 @@ O cálculo é dinheiro: precisa ser determinístico, testável sem infraestrutur
 
 | Risco | Mitigação |
 |---|---|
-| Valor da taxa errado em produção | `fee-bps` por ambiente + `TODO(PRODUTO)` + teste da fórmula (não do número) |
+| Valor da taxa errado em produção | `fee-bps` por ambiente + decisão registrada (DEC-0001) + teste da fórmula (não do número) |
 | Divergência detalhe × total | Invariante `total == Σ breakdown` testada e verificada em runtime (M2) |
 | Rounding diferente entre criação e exibição | Cálculo único no `pricing`; exibição não recalcula |
 | Mudança de moeda | `currency` explícito na reserva; multi-moeda exige ADR novo |

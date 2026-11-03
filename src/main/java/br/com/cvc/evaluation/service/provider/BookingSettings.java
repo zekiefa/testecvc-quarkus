@@ -12,10 +12,11 @@ import io.smallrye.config.WithDefault;
 @ConfigMapping(prefix = "booking")
 public interface BookingSettings {
     /**
-     * Taxa aplicada sobre a tarifa base, em <b>basis points</b> (700 = 7,00%).
+     * Taxa aplicada sobre a tarifa base, em <b>basis points</b> (500 = 5,00%;
+     * valor decidido pelo produto e registrado no ADR-004).
      *
-     * <p>A unidade é decisão fechada (ADR-004); o <b>valor</b> ainda está em aberto:
-     * {@code 700} é apenas o valor provisório de teste local, marcado como TODO(PRODUTO).</p>
+     * <p>A unidade é decisão fechada (ADR-004) e o <b>valor</b> também: 500 bps de
+     * markup ao hóspede, sobre adulto e criança, fixo para todas as reservas.</p>
      */
     int feeBps();
 

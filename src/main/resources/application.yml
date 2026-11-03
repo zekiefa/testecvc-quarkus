@@ -37,9 +37,9 @@ booking:
   currency: BRL
   # Capacidade por quarto/noite ao materializar o inventário (premissa, ver ADR-002)
   default-capacity: 1
-  # Taxa em basis points (700 = 7,00%) — ADR-004.
-  # TODO(PRODUTO): 700 é apenas o valor provisório de teste local; o valor comercial não foi definido.
-  fee-bps: 700
+  # Taxa em basis points (500 = 5,00%) — decisão de produto registrada no ADR-004:
+  # markup ao hóspede, incidindo sobre adulto e criança, fixo para todas as reservas.
+  fee-bps: 500
 
 jwt:
   expiration: 86400000
