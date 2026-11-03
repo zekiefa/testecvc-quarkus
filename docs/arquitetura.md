@@ -257,7 +257,7 @@ Erros sempre `application/problem+json` com `type` estável por classe (`…/boo
 | R5 | `room_inventory` cresce com hotéis × quartos × dias | Baixa | Aceitável nesta escala; agregar por período se doer |
 | R6 | *Boundary drift* entre módulos | Média | Regra de dependência na §3.2; ArchUnit ainda não implementado |
 | R7 | Check-in/out simulados, sem PMS real | Baixa | Declarado como fora de escopo |
-| R8 | **`mvn verify` local falha no WSL** (discovery do surefire, 18 classes) | Média | CI é o verificador autoritativo; `-Dtest=<Classe>` funciona; issue `tcq-tp9` |
+| R8 | **Sem Docker, `mvn verify` falha com mensagem enganosa** | Média | Sem o daemon, os 18 `@QuarkusTest` não sobem (Dev Services) e o surefire reporta `Could not load class` no *discovery* — sintoma que parece defeito da ferramenta. Diagnosticar com `docker info`, não com a mensagem; CI cobre a suíte |
 | R9 | Atualização da BOM do Quarkus | Média | Extensão isolada quebra (caso `resteasy-problem`); tratar o PR do Dependabot manualmente |
 | R10 | Identidade só tem seeder (sem provisionamento) | Média | Só vira problema com multi-usuário; exige endpoint/admin + ADR |
 | R11 | Busca em `/api/v1/booking/{...}` (nome enganoso) | Baixa | Dívida cosmética; renomear quando houver consumidor externo |
