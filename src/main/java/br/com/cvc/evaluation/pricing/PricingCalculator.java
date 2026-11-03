@@ -13,7 +13,7 @@ import java.util.Objects;
  *   total          = (diáriaAdulto * adultos + diáriaCrianca * criancas) * noites
  * </pre>
  *
- * <p>A taxa é recebida em <b>basis points</b> (700 = 7,00%) para evitar a ambiguidade
+ * <p>A taxa é recebida em <b>basis points</b> (500 = 5,00%) para evitar a ambiguidade
  * de frações como {@code 0.70}. O valor comercial está em aberto — ver ADR-004.</p>
  *
  * <p>Invariante: o total nunca é arredondado depois de somado; cada diária é arredondada
@@ -35,7 +35,7 @@ public final class PricingCalculator {
      * Calcula uma diária de um pax, já com a taxa aplicada.
      *
      * @param baseRate tarifa base por diária
-     * @param feeBps   taxa em basis points (700 = 7,00%); não pode ser negativa
+     * @param feeBps   taxa em basis points (500 = 5,00%); não pode ser negativa
      * @return diária com escala 2, arredondada com {@link RoundingMode#HALF_UP}
      */
     public static BigDecimal nightlyRate(final BigDecimal baseRate, final int feeBps) {

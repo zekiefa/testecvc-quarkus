@@ -33,11 +33,11 @@ import org.junit.jupiter.api.Test;
 /**
  * A precificação agora é pura ({@link br.com.cvc.evaluation.pricing.PricingCalculator}),
  * então este teste não precisa mais mockar a taxa: ele usa a configuração real do perfil
- * de teste ({@code booking.fee-bps: 700}) e compara com o valor esperado calculado aqui.
+ * de teste ({@code booking.fee-bps: 500}) e compara com o valor esperado calculado aqui.
  */
 @QuarkusTest
 class BookingServiceTest {
-    private static final int FEE_BPS = 700; // 7,00% — precisa bater com application.yaml (test)
+    private static final int FEE_BPS = 500; // 5,00% — precisa bater com application.yaml (test)
     private static final BigDecimal FEE_FACTOR =
                     BigDecimal.ONE.add(BigDecimal.valueOf(FEE_BPS).movePointLeft(4));
 

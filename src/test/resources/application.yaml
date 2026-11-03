@@ -26,7 +26,7 @@ app:
     username: usuario
     password: senha
 
-# Taxa usada nos testes (700 = 7,00%, o mesmo valor de dev). Os testes verificam a
+# Taxa usada nos testes (500 = 5,00%, o mesmo valor de dev). Os testes verificam a
 # fórmula contra este valor, não o valor como regra de negócio (ver ADR-004).
 booking:
-  fee-bps: 700
+  fee-bps: 500
