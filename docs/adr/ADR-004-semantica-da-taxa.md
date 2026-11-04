@@ -37,7 +37,9 @@ O cálculo é dinheiro: precisa ser determinístico, testável sem infraestrutur
 >
 > O que continua valendo: `fee-bps` é parametrizado **por ambiente**; os testes fixam a **fórmula**, com o valor como fixture explícita; trocar o número segue sendo mudança de configuração.
 >
-> **Lacuna remanescente:** não é o número, é a **validação de mercado** — cotar 3 reservas equivalentes em concorrente e comparar o preço final (diferença acima de 10% reabre a decisão).
+> **Validação tentada e inconclusiva (VAL-0001, 2026-11-04).** A cotação agregada de três sites para Serra Negra (1 adulto + 1 criança, 10→13/04/2027) devolveu R$ 712, R$ 1.190 e R$ 1.904 por noite — spread de 167%. A dispersão entre concorrentes é ~50x a diferença entre 5% e 7%, e os produtos não são equivalentes (apartamento inteiro vs diária de hotel), sem comparável no nosso broker. O critério de ±10% **não é aplicável** com esse instrumento.
+>
+> Critério substituído: revisar a taxa quando existir **broker real com inventário comparável** ou **dados de conversão** das primeiras reservas.
 
 ## Alternativas descartadas
 

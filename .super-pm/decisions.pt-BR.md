@@ -25,13 +25,17 @@ por ambiente em `booking.fee-bps`.
 negativa; nunca taxa zero em produção por omissão.
 
 **Evidência.** Decisão de posicionamento: 5% mantém o preço final próximo da tarifa do
-broker e ainda cobre o custo de intermediação. Ainda sem cotação de concorrentes — essa
-lacuna é a próxima validação.
+broker e ainda cobre o custo de intermediação. Ainda sem cotação de concorrentes na época da
+decisão — a tentativa posterior está em VAL-0001.
 
-**A validar.** Cotação de concorrentes pendente.
+**A validar.** Cotação agregada tentada em [VAL-0001](validations.md); o critério original não se mostrou aplicável.
 
-**Próxima validação.** Cotar 3 reservas equivalentes em concorrente e comparar o preço
-final; diferença acima de 10% reabre a decisão.
+**Próxima validação.** Revisar a taxa quando existir **broker real com inventário comparável**
+ou quando houver **dados de conversão** das primeiras reservas. A cotação de concorrentes
+(VAL-0001) não permitiu aplicar o critério de 10%.
+
+**Validações.** VAL-0001 — cotação agregada de Serra Negra: inconclusiva (ver seção
+[Validações](#validações)).
 
 **Gatilho de revisão.** Margem insuficiente, renegociação com parceiro, ou necessidade de
 taxa por canal/temporada.
@@ -49,3 +53,21 @@ evidência disponível, o limite negativo e o gatilho que a reabre.
 | Decisão | ADR correspondente |
 |---|---|
 | DEC-0001 — taxa de 5% | [ADR-004](../docs/adr/ADR-004-semantica-da-taxa.md) |
+
+---
+
+## Validações
+
+### VAL-0001 — cotação agregada de Serra Negra (inconclusiva)
+
+| Campo | Valor |
+|---|---|
+| Data | 2026-11-04 |
+| Decisão | DEC-0001 |
+| Hipótese | 5% mantém o preço final dentro de 10% do mercado |
+| Método | Média dos top-3 de Airbnb, Booking e Trivago — Serra Negra, 1a+1c, 10→13/04/2027, **por noite** |
+| Limiar | diferença > 10% reabre a decisão |
+| Observado | R$ 712 / R$ 1.190 / R$ 1.904 por noite; spread de 167% |
+| Interpretação | a dispersão entre sites (~R$ 1.192/noite) é ~50x a diferença entre 5% e 7% (R$ 23,80/noite); produtos não equivalentes e sem comparável no broker |
+| Próxima ação | trocar o critério: broker real comparável ou dados de conversão |
+| Efeito na decisão | **mantida** (5%) |

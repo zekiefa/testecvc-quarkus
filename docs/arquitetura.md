@@ -251,7 +251,7 @@ Erros sempre `application/problem+json` com `type` estável por classe (`…/boo
 | # | Risco | Sev. | Situação / mitigação |
 |---|---|---|---|
 | R1 | Chaves privadas no histórico do Git | Alta | **Mitigado**: par rotacionado, chaves fora do repositório, carga por env. O histórico continua público — o par antigo deve ser considerado comprometido |
-| R2 | Valor comercial da taxa | Média | **Fechado** por DEC-0001 (5%); resta a **validação de mercado** — cotar 3 concorrentes, diferença > 10% reabre |
+| R2 | Valor comercial da taxa | Média | **Decidido** (DEC-0001: 5%). Validação por cotação tentada e inconclusiva (VAL-0001: spread de 167% entre sites, produtos não equivalentes); critério trocado para "broker real comparável ou dados de conversão" |
 | R3 | Broker sem contrato/SLA | Média | Porta + `503` explícito; sem fallback inventado |
 | R4 | `capacity` padrão = 1 é premissa nossa | Média | Parametrizável; validar quando houver contrato de estoque |
 | R5 | `room_inventory` cresce com hotéis × quartos × dias | Baixa | Aceitável nesta escala; agregar por período se doer |
