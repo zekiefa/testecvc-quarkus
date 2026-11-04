@@ -65,7 +65,7 @@ O que a v0.2 chamava de "alvo" está entregue. Estado verificado na `main`:
 | # | Restrição | Origem |
 |---|---|---|
 | C1 | Java 21 + **Quarkus 3.40.1.1**, build Maven | `pom.xml` |
-| C2 | O **broker externo não é controlado** por nós: contrato e disponibilidade desconhecidos, sem SLA | `application.yml` → `http://localhost:3000` |
+| C2 | O **broker externo não é controlado** por nós: contrato e disponibilidade desconhecidos, sem SLA. Desde 2026-11-03 existe um **projeto nosso** para construir esse broker — ver [broker/arquitetura.md](broker/arquitetura.md) | `application.yml` → `http://localhost:3000` |
 | C3 | O broker **não expõe estoque/disponibilidade** → inventário tem de ser nosso | ADR-002 |
 | C4 | Equipe de 1 pessoa; projeto tem finalidade de estudo | contexto do projeto |
 | C5 | PostgreSQL **também em desenvolvimento**, via Dev Services (sem H2/em memória) | ADR-001 |
