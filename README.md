@@ -78,7 +78,7 @@ curl -s --request POST --url http://localhost:8080/api/v1/bookings \
   --header "Authorization: Bearer $TOKEN" \
   --header 'Content-Type: application/json' \
   --header 'Idempotency-Key: 7b1f0c2e-3a44-4c1e-9d2a-1f0e9c3b5a21' \
-  --data '{"hotelId":1,"roomId":1,"checkIn":"2027-04-10","checkOut":"2027-04-13","adults":1,"children":1}' \
+  --data '{"hotelId":1,"roomId":1,"ratePlanId":1,"checkIn":"2027-04-10","checkOut":"2027-04-13","adults":1,"children":1}' \
   -i | jq
 ```
 
@@ -93,6 +93,8 @@ Resposta: **201** com `Location`, ou **200** quando a mesma `Idempotency-Key` é
 - Requisições simultâneas: uma ganha, as outras releem a vencedora em transação nova.
 
 **Preço**
+- A tarifa vem do **broker** por data de estadia (`POST /v1/quotes`); `ratePlanId` é obrigatório
+  porque preço e política de cancelamento vivem no plano.
 - Taxa de **5% (500 bps)** sobre a tarifa base do broker, incidindo sobre adulto **e** criança.
 - Fórmula: `diária = round(tarifa × 1,05, 2, HALF_UP)`; `total = Σ diárias × noites`.
 - O preço é **congelado na reserva** (`nightlyBreakdown`) — mudança de tarifa no broker não
@@ -105,6 +107,21 @@ Resposta: **201** com `Location`, ou **200** quando a mesma `Idempotency-Key` é
 - Grafo de estados: `CONFIRMED → CHECKED_IN → CHECKED_OUT`, mais `CANCELLED` e `NO_SHOW`.
   Transição fora do grafo → `409`. `NO_SHOW` **não** devolve estoque; `CANCELLED` devolve.
 - Reserva de terceiro responde **404** (não 403 — 403 confirmaria a existência do id).
+
+## Integração com o broker
+
+A reserva consulta o contrato **v1** do broker ([testecvc-broker-quarkus](https://github.com/zekiefa/testecvc-broker-quarkus)):
+
+```shell
+# suba o broker (porta 8081), depois este serviço
+BROKER_V1_URL=http://localhost:8081 mvn quarkus:dev
+```
+
+Duas guardas de contrato: cotação que **não cobre todas as noites** e cotação em **moeda diferente**
+de `booking.currency` são tratadas como indisponibilidade (`503`), nunca como preço válido.
+
+> A busca e o detalhe de hotel ainda usam o contrato legado (`BROKER_LEGACY_URL`); a migração
+> deles está no MB3.2.
 
 ## Erros (RFC 7807)
 

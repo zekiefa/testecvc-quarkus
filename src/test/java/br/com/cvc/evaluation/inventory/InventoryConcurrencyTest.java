@@ -72,7 +72,7 @@ class InventoryConcurrencyTest {
                                     .header("Authorization", token)
                                     .header("Idempotency-Key", key)
                                     .contentType(ContentType.JSON)
-                                    .body(new CreateBookingRequest(1, 1, CHECK_IN, CHECK_IN.plusDays(2), 1, 1))
+                                    .body(new CreateBookingRequest(1, 1, 1, CHECK_IN, CHECK_IN.plusDays(2), 1, 1))
                                     .when().post(BOOKINGS);
                 });
             }

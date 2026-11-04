@@ -177,7 +177,7 @@ O grafo é dados (`BookingStatus.allowedTransitions`), não `if`s espalhados. Tr
 | `GET` | `/api/v1/booking/{cityCode}/{checkIn}/{checkOut}/{adults}/{children}` | `user` | ✅ legado (dívida R11) |
 | `GET` | `/api/v1/hotels/{id}` | `user` | ✅ |
 | `GET` | `/api/v1/hotels/{id}/availability?checkIn&checkOut` | `user` | ✅ por noite + mínimo |
-| `POST` | `/api/v1/bookings` + `Idempotency-Key` | `user` | ✅ 201 / 200 no replay |
+| `POST` | `/api/v1/bookings` + `Idempotency-Key` (`ratePlanId` obrigatório) | `user` | ✅ 201 / 200 no replay |
 | `GET` | `/api/v1/bookings/{id}` | `user` (dono) | ✅ 404 para terceiros |
 | `POST` | `/api/v1/bookings/{id}/cancel` | `user` (dono) | ✅ 409 se o estado não permitir |
 | `POST` | `/api/v1/bookings/{id}/check-in` | `user` (dono) | ✅ regra de data |
@@ -192,8 +192,8 @@ Erros sempre `application/problem+json` com `type` estável por classe (`…/boo
 1. Autenticar e autorizar (`user`) — 401 se ausente.
 2. Ler `Idempotency-Key`; se já existe **e o dono confere**, devolver a reserva (`200`) sem efeitos. Chave de outro dono → **409** (não vaza dados de terceiros).
 3. Validar: `checkOut > checkIn`, ≤ 30 noites, `adults ≥ 1`, `children ≥ 0`.
-4. Ler tarifa do broker; falha → `503`; hotel/quarto inexistente → `404`.
-5. Calcular snapshot com `PricingCalculator` (taxa de 500 bps, `HALF_UP`, escala 2).
+4. Ler a cotação do período no broker v1 (`POST /v1/quotes`, tarifa por data de estadia); falha → `503`; hotel/quarto/plano inexistente → `404`; noite sem tarifa publicada → `409 rate-unavailable`. Cotação que não cobre o período ou em outra moeda é tratada como indisponibilidade.
+5. Aplicar a taxa **por noite** sobre a tarifa líquida do broker e somar (`PricingCalculator`, 500 bps, `HALF_UP`, escala 2); o detalhamento guarda uma linha por data.
 6. Em **uma transação**: materializar o inventário do período e, por noite em ordem de data, `UPDATE … SET reserved = reserved + 1 WHERE … AND reserved + 1 <= capacity`; noite sem linha afetada → rollback + `409`.
 7. Inserir `booking` (`CONFIRMED`, `version = 0`) e `booking_event(CREATED)`; commit.
 8. `201` + `Location` (ou `200` no replay). Corrida entre requisições simultâneas: quem perde relê a vencedora em transação nova.

@@ -1,12 +1,16 @@
 package br.com.cvc.evaluation.catalog;
 
-import java.util.Objects;
+import java.time.LocalDate;
+import java.util.List;
 
+import br.com.cvc.evaluation.broker.BrokerQuoteClient;
 import br.com.cvc.evaluation.broker.BrokerService;
+import br.com.cvc.evaluation.broker.dto.BrokerQuoteRequest;
 import br.com.cvc.evaluation.broker.dto.BrokerHotel;
-import br.com.cvc.evaluation.broker.dto.BrokerHotelRoom;
 import br.com.cvc.evaluation.exceptions.BrokerUnavailableException;
 import br.com.cvc.evaluation.exceptions.HotelNotFoundException;
+import br.com.cvc.evaluation.exceptions.RateUnavailableException;
+import br.com.cvc.evaluation.service.provider.BookingSettings;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.WebApplicationException;
@@ -22,9 +26,54 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 public class BrokerCatalog {
 
     private final BrokerService broker;
+    private final BrokerQuoteClient quoteClient;
+    private final BookingSettings settings;
 
-    public BrokerCatalog(@RestClient final BrokerService broker) {
+    public BrokerCatalog(@RestClient final BrokerService broker,
+                    @RestClient final BrokerQuoteClient quoteClient,
+                    final BookingSettings settings) {
         this.broker = broker;
+        this.quoteClient = quoteClient;
+        this.settings = settings;
+    }
+
+    /**
+     * Cotação do período no contrato v1 do broker.
+     *
+     * <p>Duas violações de contrato são tratadas como indisponibilidade, não como dado válido:
+     * cotação que não cobre todas as noites e moeda diferente da nossa. Aceitar qualquer uma
+     * das duas seria gravar preço errado.</p>
+     */
+    public List<QuotedNight> quote(final Integer hotelId, final Integer roomId, final Integer ratePlanId,
+                    final LocalDate checkIn, final LocalDate checkOut, final Integer adults, final Integer children,
+                    final long nights) {
+        try {
+            final var quote = this.quoteClient.quote(new BrokerQuoteRequest(hotelId.longValue(), roomId.longValue(),
+                            ratePlanId.longValue(), checkIn, checkOut, adults, children));
+
+            if (quote == null || quote.nights() == null || quote.nights().size() != nights) {
+                throw new BrokerUnavailableException("Broker returned a quote that does not cover the period");
+            }
+            if (!this.settings.currency().equals(quote.currency())) {
+                throw new BrokerUnavailableException("Broker quoted in " + quote.currency() + ", expected "
+                                + this.settings.currency());
+            }
+
+            return quote.nights().stream()
+                            .map(night -> new QuotedNight(night.date(), night.adult(), night.child()))
+                            .toList();
+        } catch (final WebApplicationException e) {
+            if (e.getResponse() == null) {
+                throw new BrokerUnavailableException("Broker failed: " + e.getMessage());
+            }
+            throw switch (e.getResponse().getStatus()) {
+                case 404 -> new HotelNotFoundException("Hotel, room or rate plan not found");
+                case 409 -> new RateUnavailableException("Broker has no rate for some night in the period");
+                default -> new BrokerUnavailableException("Broker failed: " + e.getMessage());
+            };
+        } catch (final ProcessingException e) {
+            throw new BrokerUnavailableException("Broker unreachable: " + e.getMessage());
+        }
     }
 
     public BrokerHotel hotel(final Integer hotelId) {
@@ -44,15 +93,4 @@ public class BrokerCatalog {
         }
     }
 
-    public BrokerHotelRoom room(final Integer hotelId, final Integer roomId) {
-        final var hotel = this.hotel(hotelId);
-        if (hotel.rooms() == null) {
-            throw new HotelNotFoundException("Hotel has no rooms: " + hotelId);
-        }
-        return hotel.rooms().stream()
-                        .filter(room -> Objects.equals(room.roomID(), roomId))
-                        .findFirst()
-                        .orElseThrow(() -> new HotelNotFoundException(
-                                        "Room " + roomId + " not found in hotel " + hotelId));
-    }
 }

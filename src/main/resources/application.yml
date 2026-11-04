@@ -6,8 +6,14 @@ quarkus:
     info-description: Consulta de hoteis, disponibilidade e reservas com JWT.
 
   rest-client:
+    # contrato legado: busca e detalhe (sai no MB3.2)
     br.com.cvc.evaluation.broker.BrokerService:
-                url: http://localhost:3000
+                url: ${BROKER_LEGACY_URL:http://localhost:3000}
+    # contrato v1: cotacao usada pela reserva (repo testecvc-broker-quarkus)
+    "broker-v1":
+      url: ${BROKER_V1_URL:http://localhost:8081}
+      connect-timeout: 2000
+      read-timeout: 5000
 
   # Postgres real também em dev/test (ADR-001). Sem URL configurada, o Dev Services
   # sobe um container automaticamente; em produção a URL vem de variáveis de ambiente.

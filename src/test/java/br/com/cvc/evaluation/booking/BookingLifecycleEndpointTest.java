@@ -122,7 +122,7 @@ class BookingLifecycleEndpointTest {
                         .header("Authorization", bearer("usuario"))
                         .header("Idempotency-Key", key)
                         .contentType(ContentType.JSON)
-                        .body(new CreateBookingRequest(1, 1, checkIn, checkOut, 1, 1))
+                        .body(new CreateBookingRequest(1, 1, 1, checkIn, checkOut, 1, 1))
                         .when().post(BOOKINGS)
                         .then().statusCode(HttpStatus.SC_CREATED)
                         .extract().as(BookingResponse.class);
