@@ -9,10 +9,15 @@ import jakarta.validation.constraints.NotNull;
 /**
  * Corpo do POST /api/v1/bookings. A validação estrutural fica nas anotações (400);
  * as regras de negócio (período máximo, tarifa, estoque) ficam no caso de uso.
+ *
+ * <p>A partir do MB3 o {@code ratePlanId} é obrigatório: no broker o preço e a política de
+ * cancelamento vivem no plano, não no quarto. Escolher um plano pelo hóspede seria decidir
+ * preço e cancelamento por ele.</p>
  */
 public record CreateBookingRequest(
                 @NotNull Integer hotelId,
                 @NotNull Integer roomId,
+                @NotNull Integer ratePlanId,
                 @NotNull LocalDate checkIn,
                 @NotNull LocalDate checkOut,
                 @NotNull @Min(1) Integer adults,

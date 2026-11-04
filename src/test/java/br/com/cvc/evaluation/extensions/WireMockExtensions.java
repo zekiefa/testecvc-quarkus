@@ -14,6 +14,9 @@ import java.util.Map;
 
 import br.com.cvc.evaluation.broker.dto.BrokerHotel;
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 import io.vertx.core.spi.JsonFactory;
 
@@ -25,14 +28,18 @@ public class WireMockExtensions implements QuarkusTestResourceLifecycleManager {
 
     @Override
     public Map<String, String> start() {
-        wireMockServer = new WireMockServer();
+        wireMockServer = new WireMockServer(WireMockConfiguration.options()
+                        .extensions(new BrokerQuoteStub()));
         wireMockServer.start();
 
         stubHotels();
+        stubQuoteV1();
 
-        return Collections
-                        .singletonMap("quarkus.rest-client.\"br.com.cvc.evaluation.broker.BrokerService\".url",
-                                        wireMockServer.baseUrl());
+        return Map.of(
+                        "quarkus.rest-client.\"br.com.cvc.evaluation.broker.BrokerService\".url",
+                        wireMockServer.baseUrl(),
+                        "quarkus.rest-client.\"broker-v1\".url",
+                        wireMockServer.baseUrl());
     }
 
     @Override
@@ -40,6 +47,12 @@ public class WireMockExtensions implements QuarkusTestResourceLifecycleManager {
         if (null != wireMockServer) {
             wireMockServer.stop();
         }
+    }
+
+    /** Cotacao do contrato v1: o corpo e montado a partir da requisicao (ver BrokerQuoteStub). */
+    private void stubQuoteV1() {
+        wireMockServer.stubFor(post(urlEqualTo("/v1/quotes"))
+                        .willReturn(aResponse().withTransformers("broker-quote")));
     }
 
     private void stubHotels() {

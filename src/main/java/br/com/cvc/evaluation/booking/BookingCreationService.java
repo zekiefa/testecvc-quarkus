@@ -1,8 +1,11 @@
 package br.com.cvc.evaluation.booking;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -10,13 +13,12 @@ import br.com.cvc.evaluation.booking.dto.CreateBookingRequest;
 import br.com.cvc.evaluation.broker.BrokerService;
 import br.com.cvc.evaluation.catalog.BrokerCatalog;
 import br.com.cvc.evaluation.inventory.InventoryService;
-import br.com.cvc.evaluation.broker.dto.BrokerHotelRoom;
 import br.com.cvc.evaluation.exceptions.BookingPeriodInvalidException;
 import br.com.cvc.evaluation.exceptions.BrokerUnavailableException;
 import br.com.cvc.evaluation.exceptions.IdempotencyConflictException;
 import br.com.cvc.evaluation.exceptions.InvalidRequestException;
+import br.com.cvc.evaluation.catalog.QuotedNight;
 import br.com.cvc.evaluation.pricing.PricingCalculator;
-import br.com.cvc.evaluation.pricing.RoomQuote;
 import br.com.cvc.evaluation.service.provider.BookingSettings;
 import jakarta.enterprise.context.ApplicationScoped;
 import io.quarkus.narayana.jta.QuarkusTransaction;
@@ -87,8 +89,9 @@ public class BookingCreationService {
         }
 
         final var nights = this.validatePeriod(request.checkIn(), request.checkOut());
-        final var room = this.catalog.room(request.hotelId(), request.roomId());
-        final var quote = this.quote(room, request, nights);
+        final var quotedNights = this.catalog.quote(request.hotelId(), request.roomId(), request.ratePlanId(),
+                        request.checkIn(), request.checkOut(), request.adults(), request.children(), nights);
+        final var priced = price(quotedNights, request);
 
         final var booking = Booking.create(idempotencyKey,
                         subject,
@@ -99,8 +102,8 @@ public class BookingCreationService {
                         request.adults(),
                         request.children(),
                         this.settings.currency(),
-                        quote.totalAmount(),
-                        this.breakdown(request.checkIn(), nights, quote));
+                        priced.totalAmount(),
+                        new ArrayList<>(priced.breakdown()));
 
         // Segura as noites na mesma transação: se o insert falhar, o hold volta atrás.
         this.inventory.reserve(request.hotelId(), request.roomId(), request.checkIn(), request.checkOut());
@@ -133,22 +136,27 @@ public class BookingCreationService {
         return nights;
     }
 
-    private RoomQuote quote(final BrokerHotelRoom room, final CreateBookingRequest request, final long nights) {
-        return PricingCalculator.quote(room.price().adult(),
-                        room.price().child(),
-                        request.adults(),
-                        request.children(),
-                        nights,
-                        this.settings.feeBps());
+    /**
+     * Aplica a taxa por noite e monta o detalhamento.
+     *
+     * <p>Cada noite tem seu próprio preço líquido (o broker publica por data), então a taxa é
+     * aplicada noite a noite e o total é a soma — a invariante do ADR-004 continua valendo:
+     * total == soma do detalhamento.</p>
+     */
+    private PricedBooking price(final List<QuotedNight> nights, final CreateBookingRequest request) {
+        final var breakdown = new ArrayList<NightlyRate>(nights.size());
+        var total = BigDecimal.ZERO;
+
+        for (final var night : nights) {
+            final var adult = PricingCalculator.nightlyRate(night.adult(), this.settings.feeBps());
+            final var child = PricingCalculator.nightlyRate(night.child(), this.settings.feeBps());
+            breakdown.add(new NightlyRate(night.date().toString(), adult, child));
+            total = total.add(PricingCalculator.nightlyTotal(adult, child, request.adults(), request.children()));
+        }
+
+        return new PricedBooking(total.setScale(2, RoundingMode.HALF_UP), List.copyOf(breakdown));
     }
 
-    private ArrayList<NightlyRate> breakdown(final LocalDate checkIn, final long nights, final RoomQuote quote) {
-        final var rates = new ArrayList<NightlyRate>();
-        for (var offset = 0L; offset < nights; offset++) {
-            rates.add(new NightlyRate(checkIn.plusDays(offset).toString(),
-                            quote.pricePerDayAdult(),
-                            quote.pricePerDayChild()));
-        }
-        return rates;
+    private record PricedBooking(BigDecimal totalAmount, List<NightlyRate> breakdown) {
     }
 }

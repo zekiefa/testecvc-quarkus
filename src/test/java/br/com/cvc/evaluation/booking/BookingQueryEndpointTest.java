@@ -130,7 +130,7 @@ class BookingQueryEndpointTest {
                         .header("Authorization", bearer(subject))
                         .header("Idempotency-Key", key)
                         .contentType(ContentType.JSON)
-                        .body(new CreateBookingRequest(1, 1, CHECK_IN, CHECK_OUT, 1, 1))
+                        .body(new CreateBookingRequest(1, 1, 1, CHECK_IN, CHECK_OUT, 1, 1))
                         .when().post(BOOKINGS)
                         .then().statusCode(HttpStatus.SC_CREATED)
                         .extract().as(BookingResponse.class);

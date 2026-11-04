@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -148,6 +149,31 @@ class BookingCreationEndpointTest {
     }
 
     @Test
+    void periodWithoutPublishedRateIsConflict() {
+        // o broker responde 409 incomplete-rate-period: nosso dominio traduz para rate-unavailable
+        final var response = post("usuario", "key-no-rate", new CreateBookingRequest(1, 1, 99, CHECK_IN, CHECK_OUT, 1, 1))
+                        .statusCode(HttpStatus.SC_CONFLICT)
+                        .header("Content-Type", containsString("application/problem+json"))
+                        .extract().response();
+
+        assertTrue(response.jsonPath().getString("type").endsWith("/rate-unavailable"),
+                        "tipo do problema deve ser rate-unavailable: " + response.jsonPath().getString("type"));
+    }
+
+    @Test
+    void incompleteQuoteIsUnavailable() {
+        // broker devolve menos noites que o periodo: aceitar seria gravar preco errado
+        post("usuario", "key-short-quote", request(998, 1, CHECK_IN, CHECK_OUT, 1, 1))
+                        .statusCode(HttpStatus.SC_SERVICE_UNAVAILABLE);
+    }
+
+    @Test
+    void quoteInAnotherCurrencyIsUnavailable() {
+        post("usuario", "key-usd-quote", request(997, 1, CHECK_IN, CHECK_OUT, 1, 1))
+                        .statusCode(HttpStatus.SC_SERVICE_UNAVAILABLE);
+    }
+
+    @Test
     void keepsTheOwnerFromTheToken() {
         final var created = post("usuario", "key-owner", request(1, 1, CHECK_IN, CHECK_OUT, 1, 1))
                         .statusCode(HttpStatus.SC_CREATED)
@@ -175,6 +201,6 @@ class BookingCreationEndpointTest {
 
     private static CreateBookingRequest request(final int hotelId, final int roomId, final LocalDate checkIn,
                     final LocalDate checkOut, final int adults, final int children) {
-        return new CreateBookingRequest(hotelId, roomId, checkIn, checkOut, adults, children);
+        return new CreateBookingRequest(hotelId, roomId, 1, checkIn, checkOut, adults, children);
     }
 }

@@ -57,7 +57,7 @@ class BookingConcurrencyTest {
 
     @Test
     void concurrentRequestsWithTheSameKeyCreateExactlyOneBooking() throws Exception {
-        final var body = new CreateBookingRequest(1, 1, CHECK_IN, CHECK_IN.plusDays(2), 1, 1);
+        final var body = new CreateBookingRequest(1, 1, 1, CHECK_IN, CHECK_IN.plusDays(2), 1, 1);
         final var token = "Bearer " + this.tokenBuilder.createJWT("usuario", 86400000L);
         final var start = new CountDownLatch(1);
         final var pool = Executors.newFixedThreadPool(CONCURRENT_REQUESTS);
