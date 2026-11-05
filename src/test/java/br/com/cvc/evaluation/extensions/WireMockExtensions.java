@@ -4,6 +4,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -17,6 +18,7 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 import io.vertx.core.spi.JsonFactory;
 
@@ -29,11 +31,12 @@ public class WireMockExtensions implements QuarkusTestResourceLifecycleManager {
     @Override
     public Map<String, String> start() {
         wireMockServer = new WireMockServer(WireMockConfiguration.options()
-                        .extensions(new BrokerQuoteStub()));
+                        .extensions(new BrokerQuoteStub(), new BrokerSearchStub()));
         wireMockServer.start();
 
         stubHotels();
         stubQuoteV1();
+        stubSearchV1();
 
         return Map.of(
                         "quarkus.rest-client.\"br.com.cvc.evaluation.broker.BrokerService\".url",
@@ -53,6 +56,12 @@ public class WireMockExtensions implements QuarkusTestResourceLifecycleManager {
     private void stubQuoteV1() {
         wireMockServer.stubFor(post(urlEqualTo("/v1/quotes"))
                         .willReturn(aResponse().withTransformers("broker-quote")));
+    }
+
+    /** Busca do contrato v1: corpo montado a partir dos parametros da requisicao. */
+    private void stubSearchV1() {
+        wireMockServer.stubFor(get(urlPathEqualTo("/v1/search"))
+                        .willReturn(aResponse().withTransformers("broker-search")));
     }
 
     private void stubHotels() {

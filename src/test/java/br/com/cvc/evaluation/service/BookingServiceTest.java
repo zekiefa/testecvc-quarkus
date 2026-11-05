@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Set;
 
 import br.com.cvc.evaluation.broker.BrokerService;
+import br.com.cvc.evaluation.catalog.BrokerCatalog;
+import br.com.cvc.evaluation.catalog.QuotedHotel;
 import br.com.cvc.evaluation.broker.dto.BrokerHotel;
 import br.com.cvc.evaluation.broker.dto.BrokerHotelRoom;
 import br.com.cvc.evaluation.broker.dto.Price;
@@ -40,6 +42,9 @@ class BookingServiceTest {
     private static final int FEE_BPS = 500; // 5,00% — precisa bater com application.yaml (test)
     private static final BigDecimal FEE_FACTOR =
                     BigDecimal.ONE.add(BigDecimal.valueOf(FEE_BPS).movePointLeft(4));
+
+    @InjectMock
+    BrokerCatalog catalog;
 
     @Inject
     BookingService bookingService;
@@ -85,53 +90,35 @@ class BookingServiceTest {
 
     @Test
     void testFindHotels() {
-        // Arranges
-        final var brokerHotels = Set.of(
-                        hotel(10, "Bacana Hotel", "Gotham City", room(1, "Luxury", "900.00", "450.00")),
-                        hotel(11, "Wayne Hotel", "Gotham City", room(2, "Joker", "500.00", "250.00")));
-        when(brokerService.findHotelsByCity(anyInt())).thenReturn(brokerHotels);
-
-        final var checkin = LocalDate.of(2026, 1, 10);
+        // A busca vem da ACL: o teste mocka o broker, nao o cliente REST legado.
+        final var checkin = LocalDate.of(2027, 4, 10);
         final var checkout = checkin.plusDays(3);
+        when(catalog.search("serra-negra", checkin, checkout, 3, 2)).thenReturn(List.of(
+                        quoted(10, "Bacana Hotel", 1, "900.00", "450.00", checkin, 3),
+                        quoted(11, "Wayne Hotel", 2, "500.00", "250.00", checkin, 3)));
 
-        // Act
-        final var hotels = bookingService.findHotels(55, checkin, checkout, 3, 2);
+        final var offers = bookingService.findHotels("serra-negra", checkin, checkout, 3, 2);
 
-        // Asserts
-        final var luxury = roomOf(hotels, 10);
+        final var luxury = offers.stream().filter(o -> o.hotelId() == 10).findFirst().orElseThrow();
         final var expectedNight = nightly("900.00").multiply(BigDecimal.valueOf(3))
                         .add(nightly("450.00").multiply(BigDecimal.valueOf(2)));
 
         assertAll("find-hotels",
-                        () -> assertThat(hotels.size(), is(2)),
+                        () -> assertThat(offers.size(), is(2)),
                         () -> assertEquals(expectedNight.multiply(BigDecimal.valueOf(3))
-                                        .setScale(2, RoundingMode.HALF_UP), luxury.totalPrice()),
-                        () -> assertEquals(nightly("900.00"), luxury.priceDetail().pricePerDayAdult()),
-                        () -> verify(brokerService).findHotelsByCity(anyInt()));
+                                        .setScale(2, RoundingMode.HALF_UP), luxury.totalAmount()),
+                        () -> assertEquals(nightly("900.00"), luxury.nights().get(0).adult()),
+                        () -> assertEquals(3, luxury.nights().size()),
+                        () -> verify(catalog).search("serra-negra", checkin, checkout, 3, 2));
     }
 
     @Test
     void testFindNoHotels() {
-        // Arranges
-        when(brokerService.findHotelsByCity(anyInt())).thenReturn(Set.of());
+        final var checkin = LocalDate.of(2027, 5, 1);
+        final var checkout = checkin.plusDays(2);
+        when(catalog.search("serra-negra", checkin, checkout, 1, 0)).thenReturn(List.of());
 
-        // Act
-        final var hotels = bookingService.findHotels(27, LocalDate.now(), LocalDate.now().plusDays(3), 1, 0);
-
-        // Asserts
-        assertTrue(hotels.isEmpty());
-    }
-
-    @Test
-    void testFindEmptyWhenBrokerReturnsNull() {
-        // Arranges
-        when(brokerService.findHotelsByCity(anyInt())).thenReturn(null);
-
-        // Act
-        final var hotels = bookingService.findHotels(27, LocalDate.now(), LocalDate.now().plusDays(3), 1, 0);
-
-        // Asserts
-        assertTrue(hotels.isEmpty());
+        assertTrue(bookingService.findHotels("serra-negra", checkin, checkout, 1, 0).isEmpty());
     }
 
     @Test
@@ -142,7 +129,7 @@ class BookingServiceTest {
 
         // Act | Assert
         assertThrows(BookingPeriodInvalidException.class,
-                        () -> bookingService.findHotels(27, checkin, checkout, 1, 0));
+                        () -> bookingService.findHotels("serra-negra", checkin, checkout, 1, 0));
     }
 
     @Test
@@ -151,7 +138,7 @@ class BookingServiceTest {
         final var checkin = LocalDate.now();
 
         assertThrows(BookingPeriodInvalidException.class,
-                        () -> bookingService.findHotels(27, checkin, checkin, 1, 0));
+                        () -> bookingService.findHotels("serra-negra", checkin, checkin, 1, 0));
     }
 
     private static Room roomOf(final List<Hotel> hotels, final int hotelId) {
@@ -161,6 +148,17 @@ class BookingServiceTest {
                         .orElseThrow()
                         .rooms()
                         .get(0);
+    }
+
+    private static QuotedHotel quoted(final int hotelId, final String name, final int roomId, final String adult,
+                    final String child, final LocalDate checkIn, final int nights) {
+        final var quotedNights = java.util.stream.IntStream.range(0, nights)
+                        .mapToObj(offset -> new QuotedHotel.Night(checkIn.plusDays(offset),
+                                        new BigDecimal(adult), new BigDecimal(child)))
+                        .toList();
+
+        return new QuotedHotel(hotelId, name, "Serra Negra", roomId, "Standard", 1, "Café", "BB", "FLEXIBLE",
+                        "BRL", quotedNights);
     }
 
     private static BigDecimal nightly(final String baseRate) {

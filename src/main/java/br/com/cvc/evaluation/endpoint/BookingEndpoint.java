@@ -15,6 +15,13 @@ import jakarta.ws.rs.core.Response;
 @Path("/api/v1/booking")
 public class BookingEndpoint {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ISO_LOCAL_DATE;
+    /**
+     * Slug de cidade aceito: minúsculas, dígitos e hífen.
+     *
+     * <p>Além de recusar entrada sem sentido, isso corta o caractere de controle que
+     * permitiria forjar linha de log ({@code %0d%0a}) — o valor vem de path param.</p>
+     */
+    private static final java.util.regex.Pattern CITY_CODE = java.util.regex.Pattern.compile("[a-z0-9-]{1,64}");
 
     private final BookingService service;
 
@@ -25,11 +32,16 @@ public class BookingEndpoint {
     @GET
     @RolesAllowed({"user"})
     @Path("/{cityCode}/{checkin}/{checkout}/{adults}/{children}")
-    public Response find(@PathParam("cityCode") final Integer cityCode,
+    public Response find(@PathParam("cityCode") final String cityCode,
                     @PathParam("checkin") final String checkin,
                     @PathParam("checkout") final String checkout,
                     @PathParam("adults") final Integer adults,
                     @PathParam("children") final Integer children) {
+
+        if (cityCode == null || !CITY_CODE.matcher(cityCode).matches()) {
+            throw new InvalidRequestException(
+                            "cityCode must match [a-z0-9-]{1,64} (ex.: serra-negra): " + cityCode);
+        }
 
         return Response
                         .ok(service.findHotels(cityCode,

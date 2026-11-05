@@ -174,7 +174,7 @@ O grafo é dados (`BookingStatus.allowedTransitions`), não `if`s espalhados. Tr
 | Método | Caminho | Papel | Estado |
 |---|---|---|---|
 | `POST` | `/auth` | público | ✅ 401 genérico |
-| `GET` | `/api/v1/booking/{cityCode}/{checkIn}/{checkOut}/{adults}/{children}` | `user` | ✅ legado (dívida R11) |
+| `GET` | `/api/v1/booking/{cityCode}/{checkIn}/{checkOut}/{adults}/{children}` | `user` | ✅ contrato v1: slug da cidade, um item por hotel com as noites do melhor plano |
 | `GET` | `/api/v1/hotels/{id}` | `user` | ✅ |
 | `GET` | `/api/v1/hotels/{id}/availability?checkIn&checkOut` | `user` | ✅ por noite + mínimo |
 | `POST` | `/api/v1/bookings` + `Idempotency-Key` (`ratePlanId` obrigatório) | `user` | ✅ 201 / 200 no replay |
@@ -260,7 +260,7 @@ Erros sempre `application/problem+json` com `type` estável por classe (`…/boo
 | R8 | **Sem Docker, `mvn verify` falha com mensagem enganosa** | Média | Sem o daemon, os 18 `@QuarkusTest` não sobem (Dev Services) e o surefire reporta `Could not load class` no *discovery* — sintoma que parece defeito da ferramenta. Diagnosticar com `docker info`, não com a mensagem; CI cobre a suíte |
 | R9 | Atualização da BOM do Quarkus | Média | Extensão isolada quebra (caso `resteasy-problem`); tratar o PR do Dependabot manualmente |
 | R10 | Identidade só tem seeder (sem provisionamento) | Média | Só vira problema com multi-usuário; exige endpoint/admin + ADR |
-| R11 | Busca em `/api/v1/booking/{...}` (nome enganoso) | Baixa | Dívida cosmética; renomear quando houver consumidor externo |
+| R11 | Busca em `/api/v1/booking/{...}` e detalhe sem datas | Média | Busca já usa o contrato v1 (slug + noites). O detalhe ainda usa o cliente legado e preço de 1 noite fixa — migração pendente (MB3.2b) |
 | R12 | Legado (`endpoint`/`service`/`domain`) sobreposto aos módulos novos | Média | `BookingService` ainda faz busca + preço de exibição; migrar para `catalog` na próxima passagem |
 | R13 | Build nativo (`-Dnative`) não exercitado | Baixa | Perfil existe no `pom`; testar quando houver alvo de entrega |
 
