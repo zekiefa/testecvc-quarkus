@@ -86,6 +86,27 @@ class BookingEndpointTest {
     }
 
     @Test
+    void invalidCityCodeIsRejected() {
+        final var checkin = LocalDate.now().plusDays(2).format(DateTimeFormatter.ofPattern(DATE_FORMAT));
+        final var checkout = LocalDate.now().plusDays(5).format(DateTimeFormatter.ofPattern(DATE_FORMAT));
+
+        given().headers("Authorization", "Bearer " + tokenBuilder.createJWT("usuario", 86400000L))
+                        .when().get(String.format("/api/v1/booking/Serra%%20Negra/%s/%s/1/1", checkin, checkout))
+                        .then().statusCode(HttpStatus.SC_BAD_REQUEST);
+    }
+
+    @Test
+    void cityCodeWithControlCharactersIsRejected() {
+        // tentativa de injetar linha de log pelo path: o formato do slug corta antes
+        final var checkin = LocalDate.now().plusDays(2).format(DateTimeFormatter.ofPattern(DATE_FORMAT));
+        final var checkout = LocalDate.now().plusDays(5).format(DateTimeFormatter.ofPattern(DATE_FORMAT));
+
+        given().headers("Authorization", "Bearer " + tokenBuilder.createJWT("usuario", 86400000L))
+                        .when().get(String.format("/api/v1/booking/serra%%0D%%0Anegra/%s/%s/1/1", checkin, checkout))
+                        .then().statusCode(HttpStatus.SC_BAD_REQUEST);
+    }
+
+    @Test
     void testFindWithoutToken() {
         // Act | Asserts
         given()

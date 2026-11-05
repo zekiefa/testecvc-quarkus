@@ -122,7 +122,7 @@ public class BookingService {
 
     public List<HotelOffer> findHotels(final String cityCode, final LocalDate checkin, final LocalDate checkout,
                     final Integer adults, final Integer children) {
-        log.info("Finding hotels: city {}, checkin {}, checkout {}", cityCode, checkin, checkout);
+        log.info("Finding hotels: city {}, checkin {}, checkout {}", safe(cityCode), checkin, checkout);
         this.validateParty(adults, children);
         this.calculatePeriod(checkin, checkout);
 
@@ -137,6 +137,16 @@ public class BookingService {
      * mesmo número. Aplicar a taxa sobre o total do período daria outro valor quando a
      * diária tem dízima.
      */
+    /**
+     * Remove quebras de linha e tabulações antes de logar valor vindo de entrada.
+     *
+     * <p>Sem isso, um {@code %0d%0a} no path forja uma linha de log inteira — e quem lê o
+     * log acredita.</p>
+     */
+    private static String safe(final String value) {
+        return value == null ? "" : value.replaceAll("[\\r\\n\\t]", "_");
+    }
+
     private HotelOffer price(final QuotedHotel offer, final int adults, final int children) {
         final var pricedNights = new ArrayList<HotelOffer.PricedNight>(offer.nights().size());
         var total = BigDecimal.ZERO;
