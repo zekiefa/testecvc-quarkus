@@ -263,6 +263,7 @@ Erros sempre `application/problem+json` com `type` estável por classe (`…/boo
 | R11 | Busca em `/api/v1/booking/{...}` e detalhe sem datas | Média | Busca já usa o contrato v1 (slug + noites). O detalhe ainda usa o cliente legado e preço de 1 noite fixa — migração pendente (MB3.2b) |
 | R12 | Legado (`endpoint`/`service`/`domain`) sobreposto aos módulos novos | Média | `BookingService` ainda faz busca + preço de exibição; migrar para `catalog` na próxima passagem |
 | R13 | Build nativo (`-Dnative`) não exercitado | Baixa | Perfil existe no `pom`; testar quando houver alvo de entrega |
+| R14 | **Tarifa de atacado vs. balcão** | **Alta** | a taxa de 5% só é margem se a tarifa recebida do broker for **líquida de atacado**. Com preço de balcão, o nosso preço fica ~5% **acima** do mercado e nada falha: cotação válida, `dataSource` correto, sem erro. Detector: a validação da taxa (`tools/validar-taxa.sh`) — desvio **positivo** onde se esperava negativo (ver R9 no [broker](https://github.com/zekiefa/testecvc-broker-quarkus)) |
 
 **Já coberto:** falha do broker, idempotência (inclusive concorrente), autorização por dono, consistência de estoque e de total, auditoria de transições, preço congelado, correlação por `traceId`, contrato publicado, CI com Sonar/CodeQL/Dependabot.
 

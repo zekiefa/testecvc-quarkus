@@ -29,6 +29,13 @@ Para cada hotel, **um** registro:
 E a tarifa **líquida** que o hotel nos cobra (o `netAdult`/`netChild`). Se não houver tarifa
 líquida real, a comparação vira simulação — e deve ser declarada como tal.
 
+> ⚠️ **Líquido de atacado ≠ preço de balcão.** O modelo de markup só fecha se a tarifa recebida
+> for a de **atacado** (com desconto). Se for a de balcão — o preço que o hóspede pagaria no site
+> do hotel — o nosso preço final fica ~5% **acima** do mercado, e nada falha: cotação válida,
+> `dataSource` correto, nenhum erro. Por isso o desvio **positivo** nesta validação é sinal de
+> tarifa de balcão, não de taxa alta. Um desvio negativo (esperado) significa
+> `desconto do broker > taxa`.
+
 ## Como rodar
 
 ```shell

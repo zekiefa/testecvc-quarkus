@@ -29,9 +29,14 @@ O cálculo é dinheiro: precisa ser determinístico, testável sem infraestrutur
    - `totalReserva = Σ_diárias (diáriaAdulto × adultos + diáriaCriança × crianças) × noites`
    - **Invariante:** `totalReserva == Σ nightly_breakdown`, verificado em teste e (M2) em produção como asserção de sanidade.
 3. **Taxa configurada em basis points**, não em fração: `booking.fee-bps: 500` = **5,00%**. Esta decisão fixa a **unidade** (bps); o **valor** foi definido pelo produto em 2026-11-03 (5% sobre tarifa base, adulto e criança). Elimina a ambiguidade de `0.70` (70% vs. 0,70%).
-4. **Arredondamento explícito**: `HALF_UP`, escala 2, moeda `BRL`; arredondar **por diária por pax** e então multiplicar, nunca arredondar o total no fim (evita divergência de centavo entre detalhe e total).
-5. **Snapshot na reserva**: `total_amount` + `nightly_breakdown` (JSONB) gravados na criação; recálculo posterior usa o snapshot, não a tarifa vigente.
-6. **Testes obrigatórios**: 1 noite, 3 noites, adultos/crianças combinados, tarifa com dízima, e o caso do exemplo acima (900/450, 3 noites) com valor esperado escrito à mão.
+4. **A tarifa de entrada é líquida de atacado.** O markup só produz margem se o valor recebido
+   do broker já vier com desconto de atacado; se vier a preço de balcão, a taxa de 5% apenas
+   deixa o nosso preço ~5% acima do mercado — sem erro visível em lugar nenhum. O critério de
+   competitividade é `desconto_do_broker > taxa`, e a verificação é a validação de mercado
+   (`tools/validar-taxa.sh`): desvio positivo onde se esperava negativo indica tarifa de balcão.
+5. **Arredondamento explícito**: `HALF_UP`, escala 2, moeda `BRL`; arredondar **por diária por pax** e então multiplicar, nunca arredondar o total no fim (evita divergência de centavo entre detalhe e total).
+6. **Snapshot na reserva**: `total_amount` + `nightly_breakdown` (JSONB) gravados na criação; recálculo posterior usa o snapshot, não a tarifa vigente.
+7. **Testes obrigatórios**: 1 noite, 3 noites, adultos/crianças combinados, tarifa com dízima, e o caso do exemplo acima (900/450, 3 noites) com valor esperado escrito à mão.
 
 > ✅ **Valor definido em 2026-11-03** (registrado como DEC-0001 no Super PM): **5% (500 bps)** de markup ao hóspede, sobre a tarifa base, incidindo sobre adulto **e** criança, fixo para todas as reservas. Os 7% anteriores eram valor provisório de teste e foram substituídos.
 >
