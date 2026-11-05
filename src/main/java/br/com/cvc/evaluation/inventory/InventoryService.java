@@ -76,12 +76,12 @@ public class InventoryService {
     @Transactional
     public AvailabilityResponse availability(final Integer hotelId, final LocalDate checkIn, final LocalDate checkOut) {
         final var nights = this.nights(checkIn, checkOut);
-        final var hotel = this.catalog.hotel(hotelId);
+        final var hotel = this.catalog.hotelDetail(hotelId);
 
-        final var rooms = (hotel.rooms() == null ? List.<br.com.cvc.evaluation.broker.dto.BrokerHotelRoom>of()
-                        : hotel.rooms()).stream()
+        final var rooms = (hotel.roomTypes() == null ? List.<br.com.cvc.evaluation.broker.dto.BrokerHotelDetail.Room>of()
+                        : hotel.roomTypes()).stream()
                         .map(room -> {
-                            final var available = this.repository.availableByNight(hotelId, room.roomID(), checkIn,
+                            final var available = this.repository.availableByNight(hotelId, room.id().intValue(), checkIn,
                                             checkOut);
                             final var perNight = nights.stream()
                                             .map(night -> new AvailabilityResponse.Night(night.toString(),
@@ -92,7 +92,7 @@ public class InventoryService {
                                             .mapToInt(AvailabilityResponse.Night::available)
                                             .min()
                                             .orElse(0);
-                            return new AvailabilityResponse.Room(room.roomID(), room.categoryName(), minimum,
+                            return new AvailabilityResponse.Room(room.id().intValue(), room.name(), minimum,
                                             perNight);
                         })
                         .toList();

@@ -13,34 +13,28 @@ import java.io.InputStream;
 import java.util.Collections;
 import java.util.Map;
 
-import br.com.cvc.evaluation.broker.dto.BrokerHotel;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
-import io.vertx.core.spi.JsonFactory;
 
 public class WireMockExtensions implements QuarkusTestResourceLifecycleManager {
-    private static final String HOTELS_JSON_FILE = "/hotels.json";
-    private static final String BASE_PATH = "/";
 
     private WireMockServer wireMockServer;
 
     @Override
     public Map<String, String> start() {
         wireMockServer = new WireMockServer(WireMockConfiguration.options()
-                        .extensions(new BrokerQuoteStub(), new BrokerSearchStub()));
+                        .extensions(new BrokerQuoteStub(), new BrokerSearchStub(), new BrokerHotelDetailStub()));
         wireMockServer.start();
 
-        stubHotels();
         stubQuoteV1();
         stubSearchV1();
+        stubHotelDetailV1();
 
         return Map.of(
-                        "quarkus.rest-client.\"br.com.cvc.evaluation.broker.BrokerService\".url",
-                        wireMockServer.baseUrl(),
                         "quarkus.rest-client.\"broker-v1\".url",
                         wireMockServer.baseUrl());
     }
@@ -59,33 +53,15 @@ public class WireMockExtensions implements QuarkusTestResourceLifecycleManager {
     }
 
     /** Busca do contrato v1: corpo montado a partir dos parametros da requisicao. */
+    /** Detalhe do hotel no contrato v1. */
+    private void stubHotelDetailV1() {
+        wireMockServer.stubFor(get(urlPathMatching("/v1/hotels/[0-9]+"))
+                        .willReturn(aResponse().withTransformers("broker-hotel-detail")));
+    }
+
     private void stubSearchV1() {
         wireMockServer.stubFor(get(urlPathEqualTo("/v1/search"))
                         .willReturn(aResponse().withTransformers("broker-search")));
     }
 
-    private void stubHotels() {
-        try (InputStream is = WireMockExtensions.class.getResourceAsStream(HOTELS_JSON_FILE)) {
-            assert is != null;
-            final var hotels = new String(is.readAllBytes());
-
-            // Stub for full list of hotels:
-            wireMockServer.stubFor(get(urlPathMatching(BASE_PATH.concat("cities/([0-9]*)/hotels")))
-                            .willReturn(okJson(hotels)));
-
-            // Hotel que responde erro no broker: exercita o 503 da criação de reserva
-            wireMockServer.stubFor(get(urlEqualTo(BASE_PATH.concat("hotels/999")))
-                            .willReturn(aResponse().withStatus(500)));
-
-            // Stub for each hotel
-            final var codec = JsonFactory.load().codec();
-            final var brokerHotels = codec.fromString(hotels, BrokerHotel[].class);
-            for (final BrokerHotel hotel : brokerHotels) {
-                wireMockServer.stubFor(get(urlEqualTo(String.format(BASE_PATH.concat("hotels/%d"), hotel.id())))
-                                .willReturn(okJson(codec.toString(hotel))));
-            }
-        } catch (IOException e) {
-            fail("Could not configure Wiremock server. Caused by: " + e.getMessage());
-        }
-    }
 }

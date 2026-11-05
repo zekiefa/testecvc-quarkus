@@ -9,41 +9,31 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import br.com.cvc.evaluation.broker.BrokerService;
-import br.com.cvc.evaluation.broker.dto.BrokerHotel;
+import br.com.cvc.evaluation.broker.dto.BrokerHotelDetail;
+import br.com.cvc.evaluation.catalog.HotelDetail;
+import br.com.cvc.evaluation.exceptions.RateUnavailableException;
+import br.com.cvc.evaluation.catalog.QuotedNight;
 import br.com.cvc.evaluation.catalog.BrokerCatalog;
 import br.com.cvc.evaluation.catalog.HotelOffer;
 import br.com.cvc.evaluation.catalog.QuotedHotel;
-import br.com.cvc.evaluation.broker.dto.BrokerHotelRoom;
-import br.com.cvc.evaluation.domain.Hotel;
-import br.com.cvc.evaluation.domain.PriceDetail;
-import br.com.cvc.evaluation.domain.Room;
 import br.com.cvc.evaluation.exceptions.BookingPeriodInvalidException;
 import br.com.cvc.evaluation.exceptions.InvalidRequestException;
 import br.com.cvc.evaluation.pricing.PricingCalculator;
 import br.com.cvc.evaluation.service.provider.BookingSettings;
 import jakarta.enterprise.context.ApplicationScoped;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @ApplicationScoped
 public class BookingService {
     private static final Logger log = LoggerFactory.getLogger(BookingService.class);
-    /** Convenção do detalhe do hotel: preço exibido para 1 adulto + 1 criança, 1 noite. */
-    private static final int DETAIL_PAX = 1;
-    private static final long DETAIL_NIGHTS = 1L;
     /** Limite de sanidade para uma estadia; evita pedidos absurdos (ex.: 10 anos). */
     private static final long MAX_NIGHTS = 30L;
 
-    private final BrokerService brokerService;
     private final BrokerCatalog catalog;
     private final BookingSettings settings;
 
-    public BookingService(@RestClient final BrokerService brokerService,
-                    final BrokerCatalog catalog,
-                    final BookingSettings settings) {
-        this.brokerService = brokerService;
+    public BookingService(final BrokerCatalog catalog, final BookingSettings settings) {
         this.catalog = catalog;
         this.settings = settings;
     }
@@ -76,48 +66,82 @@ public class BookingService {
         }
     }
 
-    private Room calculateRoom(final BrokerHotelRoom brokerHotelRoom, final long nights, final int adults,
-                    final int children) {
-        log.info("Calculating room price: room {}, {} nights, {} adults, {} children",
-                        brokerHotelRoom.categoryName(), nights, adults, children);
 
-        final var quote = PricingCalculator.quote(brokerHotelRoom.price().adult(),
-                        brokerHotelRoom.price().child(),
-                        adults,
-                        children,
-                        nights,
-                        this.settings.feeBps());
 
-        log.info("Room total price: {}", quote.totalAmount());
-        return new Room(brokerHotelRoom.roomID(),
-                        brokerHotelRoom.categoryName(),
-                        quote.totalAmount(),
-                        new PriceDetail(quote.pricePerDayAdult(), quote.pricePerDayChild()));
+    /**
+     * Detalhe do hotel para um período.
+     *
+     * <p>Preço é por data, então o período é obrigatório: um "preço de referência" de 1 noite
+     * fixa seria invenção. Cada regime é cotado; regime sem tarifa publicada volta com
+     * {@code available: false} em vez de desaparecer — o hóspede precisa saber que existe e
+     * não está à venda.</p>
+     */
+    public HotelDetail getHotelDetails(final Integer hotelId, final LocalDate checkin, final LocalDate checkout,
+                    final Integer adults, final Integer children) {
+        log.info("Finding hotel details: {}, {} -> {}, {} adults, {} children", hotelId, checkin, checkout,
+                        adults, children);
+
+        this.validateParty(adults, children);
+        final var nights = this.calculatePeriod(checkin, checkout);
+        final var hotel = this.catalog.hotelDetail(hotelId);
+
+        final var rooms = hotel.roomTypes() == null ? List.<HotelDetail.Room>of()
+                        : hotel.roomTypes().stream()
+                                        .map(room -> new HotelDetail.Room(room.id(), room.name(), room.maxAdults(),
+                                                        room.maxChildren(),
+                                                        this.pricedPlans(hotelId, room, checkin, checkout, adults,
+                                                                        children, nights)))
+                                        .toList();
+
+        return new HotelDetail(hotel.id(), hotel.name(), hotel.cityName(), rooms);
     }
 
-    private Hotel calculateBooking(final BrokerHotel brokerHotel, final long nights, final int adults,
-                    final int children) {
-        log.info("Calculating booking: hotel {}, {} nights, {} adults, {} children",
-                        brokerHotel.name(), nights, adults, children);
-
-        final var rooms = Optional.ofNullable(brokerHotel.rooms()).orElseGet(List::of)
-                        .stream()
-                        .map(room -> this.calculateRoom(room, nights, adults, children))
-                        .toList();
-
-        return new Hotel(brokerHotel.id(), brokerHotel.cityName(), brokerHotel.name(), rooms);
-    }
-
-    public Optional<Hotel> getHotelDetails(final Integer codeHotel) {
-        log.info("Finding hotel details: {}", codeHotel);
-        final var hotelDetails = this.brokerService.getHotelDetails(codeHotel);
-
-        if (hotelDetails == null) {
-            return Optional.empty();
+    private List<HotelDetail.Plan> pricedPlans(final Integer hotelId, final BrokerHotelDetail.Room room,
+                    final LocalDate checkin, final LocalDate checkout, final Integer adults, final Integer children,
+                    final long nights) {
+        if (room.ratePlans() == null) {
+            return List.of();
         }
 
-        log.info("Hotel found: {}", hotelDetails);
-        return Optional.of(this.calculateBooking(hotelDetails, DETAIL_NIGHTS, DETAIL_PAX, DETAIL_PAX));
+        return room.ratePlans().stream()
+                        .map(plan -> this.pricedPlan(hotelId, room.id(), plan, checkin, checkout, adults, children,
+                                        nights))
+                        .toList();
+    }
+
+    private HotelDetail.Plan pricedPlan(final Integer hotelId, final Long roomId, final BrokerHotelDetail.Plan plan,
+                    final LocalDate checkin, final LocalDate checkout, final Integer adults, final Integer children,
+                    final long nights) {
+        try {
+            final var quotedNights = this.catalog.quote(hotelId, roomId.intValue(), plan.id().intValue(), checkin,
+                            checkout, adults, children, nights);
+            final var priced = price(quotedNights, adults, children);
+
+            return new HotelDetail.Plan(plan.id(), plan.name(), plan.board(),
+                            plan.cancellationPolicy(), true, this.settings.currency(), priced.totalAmount(),
+                            priced.nights());
+        } catch (final RateUnavailableException e) {
+            return new HotelDetail.Plan(plan.id(), plan.name(), plan.board(),
+                            plan.cancellationPolicy(), false, this.settings.currency(), null, List.of());
+        }
+    }
+
+    /** Noite a noite, com a taxa aplicada — mesma regra da reserva. */
+    private PricedNights price(final List<QuotedNight> nights, final int adults, final int children) {
+        final var priced = new ArrayList<HotelDetail.Night>(nights.size());
+        var total = BigDecimal.ZERO;
+
+        for (final var night : nights) {
+            final var adult = PricingCalculator.nightlyRate(night.adult(), this.settings.feeBps());
+            final var child = PricingCalculator.nightlyRate(night.child(), this.settings.feeBps());
+            priced.add(new HotelDetail.Night(night.date().toString(), adult, child));
+            total = total.add(PricingCalculator.nightlyTotal(adult, child, adults, children));
+        }
+
+        return new PricedNights(total.setScale(2, RoundingMode.HALF_UP), List.copyOf(priced));
+    }
+
+    private record PricedNights(BigDecimal totalAmount, List<HotelDetail.Night> nights) {
     }
 
     public List<HotelOffer> findHotels(final String cityCode, final LocalDate checkin, final LocalDate checkout,

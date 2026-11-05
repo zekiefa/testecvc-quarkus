@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import br.com.cvc.evaluation.booking.dto.CreateBookingRequest;
-import br.com.cvc.evaluation.broker.BrokerService;
 import br.com.cvc.evaluation.catalog.BrokerCatalog;
 import br.com.cvc.evaluation.inventory.InventoryService;
 import br.com.cvc.evaluation.exceptions.BookingPeriodInvalidException;

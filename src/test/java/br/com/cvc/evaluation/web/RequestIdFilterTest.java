@@ -29,7 +29,7 @@ class RequestIdFilterTest {
     void echoesTheProvidedRequestId() {
         given().header("Authorization", bearer())
                         .header(RequestIdFilter.HEADER, "abc-123")
-                        .when().get("/api/v1/hotels/1")
+                        .when().get("/api/v1/hotels/1?checkIn=2027-04-10&checkOut=2027-04-12&adults=1&children=0")
                         .then().statusCode(HttpStatus.SC_OK)
                         .header(RequestIdFilter.HEADER, is("abc-123"));
     }
@@ -37,7 +37,7 @@ class RequestIdFilterTest {
     @Test
     void generatesOneWhenAbsent() {
         given().header("Authorization", bearer())
-                        .when().get("/api/v1/hotels/1")
+                        .when().get("/api/v1/hotels/1?checkIn=2027-04-10&checkOut=2027-04-12&adults=1&children=0")
                         .then().statusCode(HttpStatus.SC_OK)
                         .header(RequestIdFilter.HEADER, matchesPattern(UUID_V4));
     }
@@ -47,7 +47,7 @@ class RequestIdFilterTest {
         // valor com espaço/quebra não é aceito como id: gera um novo
         given().header("Authorization", bearer())
                         .header(RequestIdFilter.HEADER, "id com espaco")
-                        .when().get("/api/v1/hotels/1")
+                        .when().get("/api/v1/hotels/1?checkIn=2027-04-10&checkOut=2027-04-12&adults=1&children=0")
                         .then().statusCode(HttpStatus.SC_OK)
                         .header(RequestIdFilter.HEADER, matchesPattern(UUID_V4));
     }

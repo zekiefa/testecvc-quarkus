@@ -1,56 +1,78 @@
 package br.com.cvc.evaluation.endpoint;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import br.com.cvc.evaluation.domain.Hotel;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+import br.com.cvc.evaluation.catalog.HotelDetail;
 import br.com.cvc.evaluation.extensions.TokenBuilder;
 import br.com.cvc.evaluation.extensions.WireMockExtensions;
-import io.quarkus.test.common.QuarkusTestResource;
-import io.quarkus.test.junit.QuarkusTest;
-import io.restassured.http.ContentType;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
+import io.quarkus.test.common.QuarkusTestResource;
+import io.quarkus.test.junit.QuarkusTest;
 
+/** Detalhe do hotel: período obrigatório e cada regime cotado. */
 @QuarkusTest
 @QuarkusTestResource(WireMockExtensions.class)
-public class HotelEndpointTest {
+class HotelEndpointTest {
     private final TokenBuilder tokenBuilder = new TokenBuilder();
+
     @Test
-    void testFind() {
-        final var idHotel = 1;
+    void pricesEachRatePlanForThePeriod() {
+        final var checkIn = LocalDate.now().plusDays(10);
+        final var checkOut = checkIn.plusDays(3);
 
-        final var response = given()
-                        .headers("Authorization", "Bearer "+
-                                        tokenBuilder.createJWT("usuario", 86400000L))
-                        .contentType(ContentType.JSON)
-                        .accept(ContentType.JSON)
-                        .log().all().when().get(String.format("/api/v1/hotels/%d", idHotel))
-                        .then()
-                        .statusCode(HttpStatus.SC_OK)
-                        .extract()
-                        .as(Hotel.class);
+        final var detail = given().headers("Authorization", "Bearer " + bearer())
+                        .when().get("/api/v1/hotels/1?checkIn=" + checkIn + "&checkOut=" + checkOut
+                                        + "&adults=1&children=1")
+                        .then().statusCode(HttpStatus.SC_OK)
+                        .extract().as(HotelDetail.class);
 
-        assertAll("success",
-                        () -> assertNotNull(response),
-                        () -> assertThat(response.id(), is(idHotel))
-        );
+        assertEquals(1, detail.hotelId());
+        assertEquals("Hotel Serra Verde", detail.hotelName());
+        assertEquals(1, detail.rooms().size(), "um quarto no stub");
+
+        final var plans = detail.rooms().get(0).ratePlans();
+        assertEquals(2, plans.size(), "dois regimes cotados");
+        for (final var plan : plans) {
+            assertTrue(plan.available(), "regime com tarifa publicada");
+            assertEquals(0, new BigDecimal("4252.50").compareTo(plan.totalAmount()),
+                            "900 + 450 por noite, com 5%, 3 noites");
+            assertEquals(3, plan.nights().size());
+        }
     }
 
     @Test
-    void testFindWithoutToken() {
-        // Act | Asserts
-        given()
-                        .contentType(ContentType.JSON)
-                        .accept(ContentType.JSON)
-                        .log().all()
-                        .when()
-                        .get("/api/v1/hotels/1")
-                        .then()
-                        .assertThat()
-                        .statusCode(HttpStatus.SC_UNAUTHORIZED);
+    void periodIsRequired() {
+        given().headers("Authorization", "Bearer " + bearer())
+                        .when().get("/api/v1/hotels/1")
+                        .then().statusCode(HttpStatus.SC_BAD_REQUEST)
+                        .body("type", containsString("/invalid-request"));
+    }
+
+    @Test
+    void unknownHotelIsNotFound() {
+        final var checkIn = LocalDate.now().plusDays(10);
+
+        given().headers("Authorization", "Bearer " + bearer())
+                        .when().get("/api/v1/hotels/42?checkIn=" + checkIn + "&checkOut=" + checkIn.plusDays(2))
+                        .then().statusCode(HttpStatus.SC_NOT_FOUND);
+    }
+
+    @Test
+    void requiresToken() {
+        final var checkIn = LocalDate.now().plusDays(10);
+
+        given().when().get("/api/v1/hotels/1?checkIn=" + checkIn + "&checkOut=" + checkIn.plusDays(2))
+                        .then().statusCode(HttpStatus.SC_UNAUTHORIZED);
+    }
+
+    private String bearer() {
+        return this.tokenBuilder.createJWT("usuario", 86400000L);
     }
 }

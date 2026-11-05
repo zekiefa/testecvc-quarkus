@@ -4,10 +4,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 import br.com.cvc.evaluation.broker.BrokerQuoteClient;
-import br.com.cvc.evaluation.broker.BrokerService;
+import br.com.cvc.evaluation.broker.dto.BrokerHotelDetail;
 import br.com.cvc.evaluation.broker.dto.BrokerQuoteRequest;
 import br.com.cvc.evaluation.broker.dto.BrokerSearchResponse;
-import br.com.cvc.evaluation.broker.dto.BrokerHotel;
 import br.com.cvc.evaluation.exceptions.BrokerUnavailableException;
 import br.com.cvc.evaluation.exceptions.HotelNotFoundException;
 import br.com.cvc.evaluation.exceptions.InvalidRequestException;
@@ -27,14 +26,10 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 @ApplicationScoped
 public class BrokerCatalog {
 
-    private final BrokerService broker;
     private final BrokerQuoteClient quoteClient;
     private final BookingSettings settings;
 
-    public BrokerCatalog(@RestClient final BrokerService broker,
-                    @RestClient final BrokerQuoteClient quoteClient,
-                    final BookingSettings settings) {
-        this.broker = broker;
+    public BrokerCatalog(@RestClient final BrokerQuoteClient quoteClient, final BookingSettings settings) {
         this.quoteClient = quoteClient;
         this.settings = settings;
     }
@@ -61,6 +56,24 @@ public class BrokerCatalog {
             }
             if (e.getResponse().getStatus() == 400) {
                 throw new InvalidRequestException("Broker rejected the search parameters");
+            }
+            throw new BrokerUnavailableException("Broker failed: " + e.getMessage());
+        } catch (final ProcessingException e) {
+            throw new BrokerUnavailableException("Broker unreachable: " + e.getMessage());
+        }
+    }
+
+    /** Catálogo do hotel no contrato v1. 404 do broker é "hotel não existe", não indisponibilidade. */
+    public BrokerHotelDetail hotelDetail(final Integer hotelId) {
+        try {
+            final var hotel = this.quoteClient.hotel(hotelId.longValue());
+            if (hotel == null) {
+                throw new HotelNotFoundException("Hotel not found: " + hotelId);
+            }
+            return hotel;
+        } catch (final WebApplicationException e) {
+            if (e.getResponse() != null && e.getResponse().getStatus() == 404) {
+                throw new HotelNotFoundException("Hotel not found: " + hotelId);
             }
             throw new BrokerUnavailableException("Broker failed: " + e.getMessage());
         } catch (final ProcessingException e) {
@@ -120,21 +133,5 @@ public class BrokerCatalog {
         }
     }
 
-    public BrokerHotel hotel(final Integer hotelId) {
-        try {
-            final var hotel = this.broker.getHotelDetails(hotelId);
-            if (hotel == null) {
-                throw new HotelNotFoundException("Hotel not found: " + hotelId);
-            }
-            return hotel;
-        } catch (final WebApplicationException e) {
-            if (e.getResponse() != null && e.getResponse().getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
-                throw new HotelNotFoundException("Hotel not found: " + hotelId);
-            }
-            throw new BrokerUnavailableException("Broker failed: " + e.getMessage());
-        } catch (final ProcessingException e) {
-            throw new BrokerUnavailableException("Broker unreachable: " + e.getMessage());
-        }
-    }
 
 }
