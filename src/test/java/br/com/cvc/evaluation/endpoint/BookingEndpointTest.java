@@ -1,11 +1,14 @@
 package br.com.cvc.evaluation.endpoint;
 
 import static io.restassured.RestAssured.given;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
-import br.com.cvc.evaluation.domain.Hotel;
+import br.com.cvc.evaluation.catalog.HotelOffer;
 import br.com.cvc.evaluation.extensions.TokenBuilder;
 import br.com.cvc.evaluation.extensions.WireMockExtensions;
 import io.quarkus.test.common.QuarkusTestResource;
@@ -27,18 +30,59 @@ class BookingEndpointTest {
         final var checkout = LocalDate.now().plusDays(5).format(DateTimeFormatter.ofPattern(DATE_FORMAT));
 
         // Act | Assert
-        given()
+        final var offers = given()
                         .headers("Authorization", "Bearer " +
                                         tokenBuilder.createJWT("usuario", 86400000L))
                         .contentType(ContentType.JSON)
                         .accept(ContentType.JSON)
                         .log().all()
-                        .when().get(String.format("/api/v1/booking/55/%s/%s/1/1", checkin, checkout))
+                        .when().get(String.format("/api/v1/booking/serra-negra/%s/%s/1/1", checkin, checkout))
                         .then()
                         .assertThat()
                         .statusCode(HttpStatus.SC_OK)
                         .extract()
-                        .as(Hotel[].class);
+                        .as(HotelOffer[].class);
+
+        assertEquals(2, offers.length, "dois hoteis no resultado");
+        for (final var offer : offers) {
+            assertEquals(3, offer.nights().size(), "tres noites detalhadas");
+            assertEquals(0, new BigDecimal("4252.50").compareTo(offer.totalAmount()),
+                            "900 + 450 por noite, com 5%: 4252.50");
+        }
+    }
+
+    @Test
+    void offerWithoutNightsStillAnswers() {
+        final var checkin = LocalDate.now().plusDays(2).format(DateTimeFormatter.ofPattern(DATE_FORMAT));
+        final var checkout = LocalDate.now().plusDays(5).format(DateTimeFormatter.ofPattern(DATE_FORMAT));
+
+        final var offers = given().headers("Authorization", "Bearer " + tokenBuilder.createJWT("usuario", 86400000L))
+                        .when().get(String.format("/api/v1/booking/sem-noites/%s/%s/1/1", checkin, checkout))
+                        .then().statusCode(HttpStatus.SC_OK)
+                        .extract().as(HotelOffer[].class);
+
+        assertEquals(1, offers.length);
+        assertTrue(offers[0].nights().isEmpty(), "sem noites, o detalhamento vem vazio");
+    }
+
+    @Test
+    void searchWithBrokerRejectionIsBadRequest() {
+        final var checkin = LocalDate.now().plusDays(2).format(DateTimeFormatter.ofPattern(DATE_FORMAT));
+        final var checkout = LocalDate.now().plusDays(5).format(DateTimeFormatter.ofPattern(DATE_FORMAT));
+
+        given().headers("Authorization", "Bearer " + tokenBuilder.createJWT("usuario", 86400000L))
+                        .when().get(String.format("/api/v1/booking/rejeitado/%s/%s/1/1", checkin, checkout))
+                        .then().statusCode(HttpStatus.SC_BAD_REQUEST);
+    }
+
+    @Test
+    void searchWithBrokerFailureIsUnavailable() {
+        final var checkin = LocalDate.now().plusDays(2).format(DateTimeFormatter.ofPattern(DATE_FORMAT));
+        final var checkout = LocalDate.now().plusDays(5).format(DateTimeFormatter.ofPattern(DATE_FORMAT));
+
+        given().headers("Authorization", "Bearer " + tokenBuilder.createJWT("usuario", 86400000L))
+                        .when().get(String.format("/api/v1/booking/falha/%s/%s/1/1", checkin, checkout))
+                        .then().statusCode(HttpStatus.SC_SERVICE_UNAVAILABLE);
     }
 
     @Test

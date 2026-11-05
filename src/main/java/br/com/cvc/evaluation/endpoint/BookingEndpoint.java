@@ -25,11 +25,15 @@ public class BookingEndpoint {
     @GET
     @RolesAllowed({"user"})
     @Path("/{cityCode}/{checkin}/{checkout}/{adults}/{children}")
-    public Response find(@PathParam("cityCode") final Integer cityCode,
+    public Response find(@PathParam("cityCode") final String cityCode,
                     @PathParam("checkin") final String checkin,
                     @PathParam("checkout") final String checkout,
                     @PathParam("adults") final Integer adults,
                     @PathParam("children") final Integer children) {
+
+        if (cityCode == null || cityCode.isBlank()) {
+            throw new InvalidRequestException("cityCode is required (ex.: serra-negra)");
+        }
 
         return Response
                         .ok(service.findHotels(cityCode,

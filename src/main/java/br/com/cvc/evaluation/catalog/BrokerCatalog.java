@@ -6,9 +6,11 @@ import java.util.List;
 import br.com.cvc.evaluation.broker.BrokerQuoteClient;
 import br.com.cvc.evaluation.broker.BrokerService;
 import br.com.cvc.evaluation.broker.dto.BrokerQuoteRequest;
+import br.com.cvc.evaluation.broker.dto.BrokerSearchResponse;
 import br.com.cvc.evaluation.broker.dto.BrokerHotel;
 import br.com.cvc.evaluation.exceptions.BrokerUnavailableException;
 import br.com.cvc.evaluation.exceptions.HotelNotFoundException;
+import br.com.cvc.evaluation.exceptions.InvalidRequestException;
 import br.com.cvc.evaluation.exceptions.RateUnavailableException;
 import br.com.cvc.evaluation.service.provider.BookingSettings;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -35,6 +37,48 @@ public class BrokerCatalog {
         this.broker = broker;
         this.quoteClient = quoteClient;
         this.settings = settings;
+    }
+
+    /**
+     * Busca por destino no contrato v1.
+     *
+     * <p>Erro de entrada do nosso lado (400) não é indisponibilidade: é bug nosso, e vira
+     * {@code InvalidRequestException}. O que é do broker (5xx, transporte, credencial) vira
+     * {@code 503}.</p>
+     */
+    public List<QuotedHotel> search(final String cityCode, final LocalDate checkIn, final LocalDate checkOut,
+                    final int adults, final int children) {
+        try {
+            final var response = this.quoteClient.search(cityCode, checkIn, checkOut, adults, children);
+            if (response == null || response.items() == null) {
+                return List.of();
+            }
+
+            return response.items().stream().map(BrokerCatalog::toQuotedHotel).toList();
+        } catch (final WebApplicationException e) {
+            if (e.getResponse() == null) {
+                throw new BrokerUnavailableException("Broker failed: " + e.getMessage());
+            }
+            if (e.getResponse().getStatus() == 400) {
+                throw new InvalidRequestException("Broker rejected the search parameters");
+            }
+            throw new BrokerUnavailableException("Broker failed: " + e.getMessage());
+        } catch (final ProcessingException e) {
+            throw new BrokerUnavailableException("Broker unreachable: " + e.getMessage());
+        }
+    }
+
+    private static QuotedHotel toQuotedHotel(final BrokerSearchResponse.Hit hit) {
+        final List<QuotedHotel.Night> nights = hit.nights() == null
+                        ? List.of()
+                        : hit.nights().stream()
+                                        .map(night -> new QuotedHotel.Night(night.date(), night.adult(),
+                                                        night.child()))
+                                        .toList();
+
+        return new QuotedHotel(hit.hotelId().intValue(), hit.hotelName(), hit.cityName(),
+                        hit.roomTypeId().intValue(), hit.roomTypeName(), hit.ratePlanId().intValue(),
+                        hit.ratePlanName(), hit.board(), hit.cancellationPolicy(), hit.currency(), nights);
     }
 
     /**

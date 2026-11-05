@@ -1,13 +1,19 @@
 package br.com.cvc.evaluation.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 import br.com.cvc.evaluation.broker.BrokerService;
 import br.com.cvc.evaluation.broker.dto.BrokerHotel;
+import br.com.cvc.evaluation.catalog.BrokerCatalog;
+import br.com.cvc.evaluation.catalog.HotelOffer;
+import br.com.cvc.evaluation.catalog.QuotedHotel;
 import br.com.cvc.evaluation.broker.dto.BrokerHotelRoom;
 import br.com.cvc.evaluation.domain.Hotel;
 import br.com.cvc.evaluation.domain.PriceDetail;
@@ -31,11 +37,14 @@ public class BookingService {
     private static final long MAX_NIGHTS = 30L;
 
     private final BrokerService brokerService;
+    private final BrokerCatalog catalog;
     private final BookingSettings settings;
 
     public BookingService(@RestClient final BrokerService brokerService,
+                    final BrokerCatalog catalog,
                     final BookingSettings settings) {
         this.brokerService = brokerService;
+        this.catalog = catalog;
         this.settings = settings;
     }
 
@@ -111,16 +120,37 @@ public class BookingService {
         return Optional.of(this.calculateBooking(hotelDetails, DETAIL_NIGHTS, DETAIL_PAX, DETAIL_PAX));
     }
 
-    public List<Hotel> findHotels(final Integer cityCode, final LocalDate checkin, final LocalDate checkout,
+    public List<HotelOffer> findHotels(final String cityCode, final LocalDate checkin, final LocalDate checkout,
                     final Integer adults, final Integer children) {
         log.info("Finding hotels: city {}, checkin {}, checkout {}", cityCode, checkin, checkout);
         this.validateParty(adults, children);
-        final var period = this.calculatePeriod(checkin, checkout);
-        final var hotels = Optional.ofNullable(this.brokerService.findHotelsByCity(cityCode)).orElseGet(Set::of);
+        this.calculatePeriod(checkin, checkout);
 
-        log.info("Result of searching hotels: {}", hotels.size());
-        return hotels.stream()
-                        .map(brokerHotel -> this.calculateBooking(brokerHotel, period, adults, children))
-                        .toList();
+        final var offers = this.catalog.search(cityCode, checkin, checkout, adults, children);
+        log.info("Result of searching hotels: {}", offers.size());
+
+        return offers.stream().map(offer -> this.price(offer, adults, children)).toList();
+    }
+
+    /**
+     * Aplica a taxa por noite — a mesma regra da reserva, para busca e criação mostrarem o
+     * mesmo número. Aplicar a taxa sobre o total do período daria outro valor quando a
+     * diária tem dízima.
+     */
+    private HotelOffer price(final QuotedHotel offer, final int adults, final int children) {
+        final var pricedNights = new ArrayList<HotelOffer.PricedNight>(offer.nights().size());
+        var total = BigDecimal.ZERO;
+
+        for (final var night : offer.nights()) {
+            final var adult = PricingCalculator.nightlyRate(night.adult(), this.settings.feeBps());
+            final var child = PricingCalculator.nightlyRate(night.child(), this.settings.feeBps());
+            pricedNights.add(new HotelOffer.PricedNight(night.date().toString(), adult, child));
+            total = total.add(PricingCalculator.nightlyTotal(adult, child, adults, children));
+        }
+
+        return new HotelOffer(offer.hotelId(), offer.hotelName(), offer.cityName(), offer.roomId(),
+                        offer.roomTypeName(), offer.ratePlanId(), offer.ratePlanName(), offer.board(),
+                        offer.cancellationPolicy(), offer.currency(),
+                        total.setScale(2, RoundingMode.HALF_UP), List.copyOf(pricedNights));
     }
 }

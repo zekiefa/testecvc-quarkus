@@ -57,7 +57,7 @@ Credencial inválida devolve **401 genérico**, sem revelar se o usuário existe
 | `POST` | `/api/v1/bookings/{id}/check-in` | `user` (dono) | Check-in na data ou depois |
 | `POST` | `/api/v1/bookings/{id}/check-out` | `user` (dono) | Exige `CHECKED_IN` |
 | `POST` | `/api/v1/bookings/{id}/no-show` | `user` (dono) | Após a data, sem check-in |
-| `GET` | `/api/v1/booking/{cityCode}/{checkIn}/{checkOut}/{adults}/{children}` | `user` | Busca por cidade (**legado**, ver [dívidas](docs/arquitetura.md)) |
+| `GET` | `/api/v1/booking/{cityCode}/{checkIn}/{checkOut}/{adults}/{children}` | `user` | Busca por cidade (slug), melhor plano por hotel |
 | `GET` | `/q/openapi` · `/q/health` · `/q/metrics` | — | Contrato, saúde e métricas |
 
 ### Exemplo: disponibilidade
