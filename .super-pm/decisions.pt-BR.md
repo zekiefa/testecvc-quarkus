@@ -28,11 +28,12 @@ negativa; nunca taxa zero em produção por omissão.
 broker e ainda cobre o custo de intermediação. Ainda sem cotação de concorrentes na época da
 decisão — a tentativa posterior está em VAL-0001.
 
-**A validar.** Cotação agregada tentada em [VAL-0001](validations.md); o critério original não se mostrou aplicável.
+**A validar.** Mecanismo pronto: broker com publicação por PUSH e ferramenta de comparação ([`tools/validar-taxa.sh`](../tools/validar-taxa.sh)). Falta publicar tarifas **reais** de 2–3 hotéis.
 
-**Próxima validação.** Revisar a taxa quando existir **broker real com inventário comparável**
-ou quando houver **dados de conversão** das primeiras reservas. A cotação de concorrentes
-(VAL-0001) não permitiu aplicar o critério de 10%.
+**Próxima validação.** Publicar a **tarifa líquida real** de 2–3 hotéis de Serra Negra via
+`PUT /admin/rooms/{id}/rates` (origem `PUSH`), rodar [`tools/validar-taxa.sh`](../tools/validar-taxa.sh)
+e comparar o preço final com o público do **mesmo hotel e datas**. Desvio acima de 10% reabre a
+decisão. O método está descrito em [`docs/validacao/taxa.md`](../docs/validacao/taxa.md).
 
 **Validações.** VAL-0001 — cotação agregada de Serra Negra: inconclusiva (ver seção
 [Validações](#validações)).
