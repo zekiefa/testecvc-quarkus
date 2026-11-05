@@ -2,12 +2,14 @@ package br.com.cvc.evaluation.broker;
 
 import java.time.LocalDate;
 
+import br.com.cvc.evaluation.broker.dto.BrokerHotelDetail;
 import br.com.cvc.evaluation.broker.dto.BrokerQuote;
 import br.com.cvc.evaluation.broker.dto.BrokerQuoteRequest;
 import br.com.cvc.evaluation.broker.dto.BrokerSearchResponse;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.QueryParam;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
@@ -24,6 +26,11 @@ public interface BrokerQuoteClient {
     @POST
     @Path("v1/quotes")
     BrokerQuote quote(BrokerQuoteRequest request);
+
+    /** Catálogo do hotel: quartos e regimes, sem preço (o preço vem da cotação). */
+    @GET
+    @Path("v1/hotels/{hotelId}")
+    BrokerHotelDetail hotel(@PathParam("hotelId") long hotelId);
 
     /** Busca por destino: um item por hotel, com as noites do plano mais barato. */
     @GET

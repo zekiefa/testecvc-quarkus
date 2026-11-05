@@ -49,7 +49,7 @@ Credencial inválida devolve **401 genérico**, sem revelar se o usuário existe
 | Método | Caminho | Papel | Descrição |
 |---|---|---|---|
 | `POST` | `/auth` | público | Login; devolve o JWT |
-| `GET` | `/api/v1/hotels/{id}` | `user` | Detalhe do hotel com preço por diária |
+| `GET` | `/api/v1/hotels/{id}?checkIn&checkOut&adults&children` | `user` | Detalhe do hotel cotado para o período |
 | `GET` | `/api/v1/hotels/{id}/availability?checkIn&checkOut` | `user` | Disponibilidade por noite e por quarto |
 | `POST` | `/api/v1/bookings` | `user` | Cria reserva (exige `Idempotency-Key`) |
 | `GET` | `/api/v1/bookings/{id}` | `user` (dono) | Consulta a reserva |
@@ -120,8 +120,8 @@ BROKER_V1_URL=http://localhost:8081 mvn quarkus:dev
 Duas guardas de contrato: cotação que **não cobre todas as noites** e cotação em **moeda diferente**
 de `booking.currency` são tratadas como indisponibilidade (`503`), nunca como preço válido.
 
-> A busca e o detalhe de hotel ainda usam o contrato legado (`BROKER_LEGACY_URL`); a migração
-> deles está no MB3.2.
+> Busca e detalhe usam **só** o contrato v1. O cliente legado (`BROKER_LEGACY_URL`) foi removido
+> junto com o fixture `hotels.json`.
 
 ## Erros (RFC 7807)
 

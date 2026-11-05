@@ -6,9 +6,6 @@ quarkus:
     info-description: Consulta de hoteis, disponibilidade e reservas com JWT.
 
   rest-client:
-    # contrato legado: busca e detalhe (sai no MB3.2)
-    br.com.cvc.evaluation.broker.BrokerService:
-                url: ${BROKER_LEGACY_URL:http://localhost:3000}
     # contrato v1: cotacao usada pela reserva (repo testecvc-broker-quarkus)
     "broker-v1":
       url: ${BROKER_V1_URL:http://localhost:8081}
