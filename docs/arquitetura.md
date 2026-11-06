@@ -191,7 +191,7 @@ Erros sempre `application/problem+json` com `type` estável por classe (`…/boo
 
 1. Autenticar e autorizar (`user`) — 401 se ausente.
 2. Ler `Idempotency-Key`; se já existe **e o dono confere**, devolver a reserva (`200`) sem efeitos. Chave de outro dono → **409** (não vaza dados de terceiros).
-3. Validar: `checkOut > checkIn`, ≤ 30 noites, `adults ≥ 1`, `children ≥ 0`.
+3. Validar: `checkOut > checkIn`, período ≤ `booking.max-nights` (padrão 30, ambiente `BOOKING_MAX_NIGHTS`), `adults ≥ 1`, `children ≥ 0`.
 4. Ler a cotação do período no broker v1 (`POST /v1/quotes`, tarifa por data de estadia); falha → `503`; hotel/quarto/plano inexistente → `404`; noite sem tarifa publicada → `409 rate-unavailable`. Tratadas como indisponibilidade (`503`): cotação que não cobre o período, em outra moeda, ou **com `staleAfter` no passado** (dado que o próprio broker marca como vencido). O frescor é verificado no consumo, não só publicado.
 5. Aplicar a taxa **por noite** sobre a tarifa líquida do broker e somar (`PricingCalculator`, 1176 bps, `HALF_UP`, escala 2); o detalhamento guarda uma linha por data.
 6. Em **uma transação**: materializar o inventário do período e, por noite em ordem de data, `UPDATE … SET reserved = reserved + 1 WHERE … AND reserved + 1 <= capacity`; noite sem linha afetada → rollback + `409`.
