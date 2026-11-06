@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Status | Aceita — valor definido: **5% (500 bps)** de markup ao hóspede, sobre adulto e criança |
+| Status | Aceita — valor definido: **11,76% (1176 bps)** de markup ao hóspede, sobre adulto e criança (DEC-0002, substitui DEC-0001) |
 | Data | 2026-10-28 |
 | Decisores | Time de desenvolvimento |
 | Relacionados | [ADR-001](ADR-001-monolito-modular.md) · [ADR-003](ADR-003-idempotencia-e-maquina-de-estados.md) |
@@ -30,7 +30,7 @@ O cálculo é dinheiro: precisa ser determinístico, testável sem infraestrutur
    - **Invariante:** `totalReserva == Σ nightly_breakdown`, verificado em teste e (M2) em produção como asserção de sanidade.
 3. **Taxa configurada em basis points**, não em fração: `booking.fee-bps: 500` = **5,00%**. Esta decisão fixa a **unidade** (bps); o **valor** foi definido pelo produto em 2026-11-03 (5% sobre tarifa base, adulto e criança). Elimina a ambiguidade de `0.70` (70% vs. 0,70%).
 4. **A tarifa de entrada é líquida de atacado.** O markup só produz margem se o valor recebido
-   do broker já vier com desconto de atacado; se vier a preço de balcão, a taxa de 5% apenas
+   do broker já vier com desconto de atacado; se vier a preço de balcão, a taxa apenas
    deixa o nosso preço ~5% acima do mercado — sem erro visível em lugar nenhum. O critério de
    competitividade é `desconto_do_broker > taxa`, e a verificação é a validação de mercado
    (`tools/validar-taxa.sh`): desvio positivo onde se esperava negativo indica tarifa de balcão.
@@ -38,7 +38,9 @@ O cálculo é dinheiro: precisa ser determinístico, testável sem infraestrutur
 6. **Snapshot na reserva**: `total_amount` + `nightly_breakdown` (JSONB) gravados na criação; recálculo posterior usa o snapshot, não a tarifa vigente.
 7. **Testes obrigatórios**: 1 noite, 3 noites, adultos/crianças combinados, tarifa com dízima, e o caso do exemplo acima (900/450, 3 noites) com valor esperado escrito à mão.
 
-> ✅ **Valor definido em 2026-11-03** (registrado como DEC-0001 no Super PM): **5% (500 bps)** de markup ao hóspede, sobre a tarifa base, incidindo sobre adulto **e** criança, fixo para todas as reservas. Os 7% anteriores eram valor provisório de teste e foram substituídos.
+> ✅ **Valor vigente: 11,76% (1176 bps)** — DEC-0002, de 2026-11-06, que substitui a DEC-0001 (5%). Markup ao hóspede sobre a tarifa líquida de atacado, adulto **e** criança, fixo para todas as reservas.
+>
+> A escolha veio de medição, não de intuição: a coleta com hotel comparável (VAL-0002) mostrou spread de apenas 5,01% entre sites para o mesmo produto, e que **5% deixava o nosso preço 10,75% abaixo do mercado**. Com comissão de 15%, o desvio é `(1 − 0,15) × (1 + taxa) − 1`; **11,76%** produz ~−5,00%, mantendo vantagem sem abrir mão de margem. Taxas de referência: 5,88% → −10%; 17,65% → paridade.
 >
 > O que continua valendo: `fee-bps` é parametrizado **por ambiente**; os testes fixam a **fórmula**, com o valor como fixture explícita; trocar o número segue sendo mudança de configuração.
 >

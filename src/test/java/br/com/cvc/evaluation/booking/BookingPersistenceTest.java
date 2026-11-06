@@ -51,12 +51,12 @@ class BookingPersistenceTest {
                         () -> assertEquals("BRL", reloaded.currency),
                         () -> assertEquals(1, reloaded.adults),
                         () -> assertEquals(1, reloaded.children),
-                        () -> assertEquals(0, new BigDecimal("2835.00").compareTo(reloaded.totalAmount)),
+                        () -> assertEquals(0, new BigDecimal("3017.52").compareTo(reloaded.totalAmount)),
                         () -> assertEquals(2, reloaded.nightlyBreakdown.size()),
                         () -> assertEquals("2026-11-10", reloaded.nightlyBreakdown.get(0).stayDate()),
-                        () -> assertEquals(0, new BigDecimal("945.00")
+                        () -> assertEquals(0, new BigDecimal("1005.84")
                                         .compareTo(reloaded.nightlyBreakdown.get(0).adultAmount())),
-                        () -> assertEquals(0, new BigDecimal("472.50")
+                        () -> assertEquals(0, new BigDecimal("502.92")
                                         .compareTo(reloaded.nightlyBreakdown.get(0).childAmount())),
                         () -> assertNotNull(reloaded.createdAt),
                         () -> assertNotNull(reloaded.updatedAt),
@@ -136,10 +136,10 @@ class BookingPersistenceTest {
     private static Booking sample(final String idempotencyKey) {
         final var checkIn = LocalDate.of(2026, 11, 10);
         final var breakdown = List.of(
-                        new NightlyRate("2026-11-10", new BigDecimal("945.00"), new BigDecimal("472.50")),
-                        new NightlyRate("2026-11-11", new BigDecimal("945.00"), new BigDecimal("472.50")));
+                        new NightlyRate("2026-11-10", new BigDecimal("1005.84"), new BigDecimal("502.92")),
+                        new NightlyRate("2026-11-11", new BigDecimal("1005.84"), new BigDecimal("502.92")));
 
         return Booking.create(idempotencyKey, "usuario", 55, 1, checkIn, checkIn.plusDays(2), 1, 1, "BRL",
-                        new BigDecimal("2835.00"), breakdown);
+                        new BigDecimal("3017.52"), breakdown);
     }
 }

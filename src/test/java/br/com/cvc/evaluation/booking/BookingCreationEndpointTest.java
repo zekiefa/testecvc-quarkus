@@ -30,8 +30,8 @@ import io.restassured.http.ContentType;
  * POST /api/v1/bookings: criação, replay idempotente, autorização por dono e
  * tratamento de falha do broker.
  *
- * <p>Hotel 1 / quarto 1 tem tarifa 900 (adulto) e 450 (criança). Com a taxa de 500 bps
- * e 1 adulto + 1 criança, a diária fica 945.00 + 472.50.</p>
+ * <p>Hotel 1 / quarto 1 tem tarifa 900 (adulto) e 450 (criança). Com a taxa de 1176 bps
+ * e 1 adulto + 1 criança, a diária fica 1005.84 + 502.92.</p>
  */
 @QuarkusTest
 @QuarkusTestResource(WireMockExtensions.class)
@@ -73,10 +73,10 @@ class BookingCreationEndpointTest {
                         () -> assertEquals("CONFIRMED", response.status()),
                         () -> assertEquals("BRL", response.currency()),
                         () -> assertEquals(3, response.nightlyBreakdown().size(), "3 noites"),
-                        () -> assertEquals(0, new BigDecimal("945.00")
+                        () -> assertEquals(0, new BigDecimal("1005.84")
                                         .compareTo(response.nightlyBreakdown().get(0).adultAmount())),
-                        () -> assertEquals(0, new BigDecimal("4252.50").compareTo(response.totalAmount()),
-                                        "(945.00 + 472.50) * 3"));
+                        () -> assertEquals(0, new BigDecimal("4526.28").compareTo(response.totalAmount()),
+                                        "(1005.84 + 502.92) * 3"));
     }
 
     @Test

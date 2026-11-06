@@ -8,67 +8,87 @@
 
 ---
 
-## DEC-0001 — Qual a taxa de serviço comercial aplicada sobre a tarifa da reserva?
+## DEC-0002 — Qual a taxa de serviço comercial aplicada sobre a tarifa da reserva? · **vigente**
+
+| Campo | Valor |
+|---|---|
+| ID | `DEC-0002` |
+| Status | **vigente** — substitui a `DEC-0001` |
+| Data | 2026-11-06 |
+| Responsável | produto |
+| Motivo da mudança | a coleta com hotel comparável (VAL-0002) mostrou que 5% deixava o preço 10,75% **abaixo** do mercado |
+
+**Decisão.** Aplicar **11,76% (1176 bps)** de markup ao hóspede sobre a **tarifa líquida de
+atacado**, incidindo sobre adulto e criança, fixo para todas as reservas e configurável em
+`booking.fee-bps`. O valor é o que mantém ~5% de vantagem sobre o mercado com comissão de 15%.
+
+**Limite negativo.** Nunca aplicar taxa sobre valor já taxado (bitributação); nunca taxa
+negativa; nunca taxa zero em produção por omissão; **nunca assumir preço de balcão como líquido
+de atacado** (risco R14).
+
+**Evidência.** VAL-0002 (Hotel Fazenda Vale da Cachoeira, 3 sites, 10–13/04/2027): spread de
+apenas 5,01% entre sites para o mesmo hotel; com 5% o nosso preço ficava 10,75% abaixo do
+mercado. O desvio depende só de comissão e taxa: `delta = (1 − comissão) × (1 + taxa) − 1`.
+
+**Próxima validação.** Obter a comissão **real** praticada pelo nosso broker para o hotel
+coletado e recalcular o desvio; se sair de ±10%, revisar a taxa.
+
+**Gatilho de revisão.** Comissão real do broker diferente de 15%; dados de conversão das
+primeiras reservas; ou necessidade de preço/desconto por canal ou temporada (tabela de preços).
+
+---
+
+## DEC-0001 — mesma pergunta · **substituída pela DEC-0002**
 
 | Campo | Valor |
 |---|---|
 | ID | `DEC-0001` |
-| Status | vigente |
+| Status | substituída em 2026-11-06 |
 | Data | 2026-11-03 |
-| Responsável | produto |
-
-**Decisão.** Aplicar **5% (500 bps)** sobre a tarifa base do broker, incidindo sobre adulto
-e criança, como markup embutido no preço final. Fixa para todas as reservas e configurável
-por ambiente em `booking.fee-bps`.
-
-**Limite negativo.** Nunca aplicar taxa sobre valor já taxado (bitributação); nunca taxa
-negativa; nunca taxa zero em produção por omissão.
-
-**Evidência.** Decisão de posicionamento: 5% mantém o preço final próximo da tarifa do
-broker e ainda cobre o custo de intermediação. Ainda sem cotação de concorrentes na época da
-decisão — a tentativa posterior está em VAL-0001.
-
-**A validar.** Mecanismo pronto: broker com publicação por PUSH e ferramenta de comparação ([`tools/validar-taxa.sh`](../tools/validar-taxa.sh)). Falta publicar tarifas **reais** de 2–3 hotéis.
-
-**Próxima validação.** Publicar a **tarifa líquida real** de 2–3 hotéis de Serra Negra via
-`PUT /admin/rooms/{id}/rates` (origem `PUSH`), rodar [`tools/validar-taxa.sh`](../tools/validar-taxa.sh)
-e comparar o preço final com o público do **mesmo hotel e datas**. Desvio acima de 10% reabre a
-decisão. O método está descrito em [`docs/validacao/taxa.md`](../docs/validacao/taxa.md).
-
-**Validações.** VAL-0001 — cotação agregada de Serra Negra: inconclusiva (ver seção
-[Validações](#validações)).
-
-**Gatilho de revisão.** Margem insuficiente, renegociação com parceiro, ou necessidade de
-taxa por canal/temporada.
-
-**Substitui / substituída por / motivo da mudança.** Não se aplica — decisão original.
-
----
-
-## Como isso se relaciona com os ADRs
-
-Os ADRs em [`docs/adr/`](../docs/adr/) já são escritos em português e são o documento
-técnico de referência. Este registro é o lado de **produto**: registra a decisão, a
-evidência disponível, o limite negativo e o gatilho que a reabre.
-
-| Decisão | ADR correspondente |
-|---|---|
-| DEC-0001 — taxa de 5% | [ADR-004](../docs/adr/ADR-004-semantica-da-taxa.md) |
+| Decisão original | 5% (500 bps) sobre a tarifa |
+| Por que caiu | conservador demais: 10,75% abaixo do mercado |
 
 ---
 
 ## Validações
 
-### VAL-0001 — cotação agregada de Serra Negra (inconclusiva)
+### VAL-0002 — coleta real com hotel comparável · 2026-11-06
 
 | Campo | Valor |
 |---|---|
-| Data | 2026-11-04 |
-| Decisão | DEC-0001 |
+| Hipótese | 5% mantém o preço dentro de 10% do mercado, para o mesmo hotel e datas |
+| Método | Hotel Fazenda Vale da Cachoeira, Serra Negra · 10→13/04/2027 · 1a+1c · 3 noites · coleta em 05/11/2026 · líquido **inferido** pela comissão de cada site (`líquido = bruto × (1 − comissão)`) |
+| Amostra | Booking 2.600,00 · Decolar 2.478,00 · Hoteis.com 2.476,00 |
+| Limiar | desvio acima de 10% reabre a decisão |
+| Observado | spread de **5,01%**; nosso preço com 5% = 2.209,83 (**−10,75%**) |
+| Interpretação | fora da faixa **na direção favorável** — a taxa estava conservadora; o instrumento agora mede (antes: 167% de dispersão comparando hotéis diferentes) |
+| Ação | taxa elevada para **11,76%** → desvio ≈ **−5,00%** (DEC-0002) |
+| Efeito na decisão | **alterada** |
+
+#### Taxas de referência (comissão 15%)
+
+| Taxa | Desvio | Leitura |
+|---|---|---|
+| 5% | −10,75% | mais barato que o necessário |
+| 5,88% | −10,00% | limite da faixa |
+| **11,76%** | **−5,00%** | **posição atual** |
+| 17,65% | 0% | paridade com o mercado |
+
+### VAL-0001 — cotação agregada de Serra Negra · 2026-11-04
+
+| Campo | Valor |
+|---|---|
 | Hipótese | 5% mantém o preço final dentro de 10% do mercado |
-| Método | Média dos top-3 de Airbnb, Booking e Trivago — Serra Negra, 1a+1c, 10→13/04/2027, **por noite** |
-| Limiar | diferença > 10% reabre a decisão |
-| Observado | R$ 712 / R$ 1.190 / R$ 1.904 por noite; spread de 167% |
-| Interpretação | a dispersão entre sites (~R$ 1.192/noite) é ~50x a diferença entre 5% e 7% (R$ 23,80/noite); produtos não equivalentes e sem comparável no broker |
-| Próxima ação | trocar o critério: broker real comparável ou dados de conversão |
-| Efeito na decisão | **mantida** (5%) |
+| Método | média dos top-3 de Airbnb, Booking e Trivago — **produtos não equivalentes**, por noite |
+| Observado | R$ 712 / 1.190 / 1.904 por noite — spread de 167% |
+| Interpretação | dispersão entre sites ~50× a diferença entre 5% e 7%; sem comparável no broker da época |
+| Efeito na decisão | mantida (na ocasião) |
+
+---
+
+## Como isso se relaciona com os ADRs
+
+| Decisão | ADR correspondente |
+|---|---|
+| DEC-0002 — taxa de 11,76% (vigente) | [ADR-004](../docs/adr/ADR-004-semantica-da-taxa.md) |
+| DEC-0001 — taxa de 5% (substituída) | [ADR-004](../docs/adr/ADR-004-semantica-da-taxa.md) |

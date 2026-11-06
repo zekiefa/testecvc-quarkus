@@ -80,7 +80,7 @@ while IFS=, read -r hotelId roomId ratePlanId checkIn checkOut adults children n
         curl -sf -X POST "$API_URL/api/v1/bookings/$bookingId/cancel" -H "Authorization: Bearer $TOKEN" >/dev/null \
             || echo "aviso: não foi possível cancelar $bookingId (estoque ocupado)" >&2
     else
-        ours=$(local_total "$netAdult" "$netChild" "$adults" "$children" "$nights" 500)
+        ours=$(local_total "$netAdult" "$netChild" "$adults" "$children" "$nights" "${FEE_BPS:-1176}")
     fi
 
     read -r delta sign <<<"$(awk -v o="$ours" -v m="$marketPrice" 'BEGIN{d=(o-m)/m*100; printf "%.1f %s", (d<0?-d:d), (d<0?"-":"+")}')"

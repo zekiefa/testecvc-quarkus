@@ -95,7 +95,9 @@ Resposta: **201** com `Location`, ou **200** quando a mesma `Idempotency-Key` é
 **Preço**
 - A tarifa vem do **broker** por data de estadia (`POST /v1/quotes`); `ratePlanId` é obrigatório
   porque preço e política de cancelamento vivem no plano.
-- Taxa de **5% (500 bps)** sobre a tarifa base do broker, incidindo sobre adulto **e** criança.
+- Taxa de **11,76% (1176 bps)** sobre a tarifa líquida de atacado, incidindo sobre adulto **e** criança.
+  O valor vem de medição: com comissão de 15% do site, ele deixa o preço ~5% abaixo do mercado
+  (`delta = (1 − comissão) × (1 + taxa) − 1`) — ver [DEC-0002](.super-pm/decisions.pt-BR.md).
 - Fórmula: `diária = round(tarifa × 1,05, 2, HALF_UP)`; `total = Σ diárias × noites`.
 - O preço é **congelado na reserva** (`nightlyBreakdown`) — mudança de tarifa no broker não
   altera reserva confirmada.
@@ -217,7 +219,7 @@ Sem `SONAR_TOKEN` o passo de análise é pulado e o build continua verde.
   (v0.2 e v0.1 em [`docs/archive/`](docs/archive/))
 - [ADRs](docs/adr/README.md) — decisões vigentes (monólito modular, fonte da verdade,
   idempotência/estados, semântica da taxa)
-- [Decisões de produto](.super-pm/decisions.pt-BR.md) — DEC-0001: taxa de 5%
+- [Decisões de produto](.super-pm/decisions.pt-BR.md) — DEC-0002: taxa de 11,76% (substitui a DEC-0001, de 5%)
 
 ## References
 

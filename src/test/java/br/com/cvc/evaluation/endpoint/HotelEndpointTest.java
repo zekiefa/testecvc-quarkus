@@ -41,7 +41,7 @@ class HotelEndpointTest {
         assertEquals(2, plans.size(), "dois regimes cotados");
         for (final var plan : plans) {
             assertTrue(plan.available(), "regime com tarifa publicada");
-            assertEquals(0, new BigDecimal("4252.50").compareTo(plan.totalAmount()),
+            assertEquals(0, new BigDecimal("4526.28").compareTo(plan.totalAmount()),
                             "900 + 450 por noite, com 5%, 3 noites");
             assertEquals(3, plan.nights().size());
         }

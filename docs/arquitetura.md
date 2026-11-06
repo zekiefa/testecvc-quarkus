@@ -6,7 +6,7 @@
 | Data | 2026-11-03 |
 | Status | **M0, M1, M2 e M3 implementados e mergeados na `main`**; CI ativo; M4 (IA) pausado |
 | Documentos relacionados | [ADR-001](adr/ADR-001-monolito-modular.md) · [ADR-002](adr/ADR-002-fonte-da-verdade.md) · [ADR-003](adr/ADR-003-idempotencia-e-maquina-de-estados.md) · [ADR-004](adr/ADR-004-semantica-da-taxa.md) |
-| Decisões de produto | [.super-pm/decisions.pt-BR.md](../.super-pm/decisions.pt-BR.md) (DEC-0001: taxa de 5%) |
+| Decisões de produto | [.super-pm/decisions.pt-BR.md](../.super-pm/decisions.pt-BR.md) (DEC-0002: taxa de 11,76%, que substitui a DEC-0001) |
 | Base analisada | commit da `main` após o merge do PR #25 (Quarkus 3.40.1.1, Java 21) |
 | Versões anteriores | [archive/arquitetura-v0.1.md](archive/arquitetura-v0.1.md) · [archive/arquitetura-v0.2.md](archive/arquitetura-v0.2.md) |
 
@@ -193,7 +193,7 @@ Erros sempre `application/problem+json` com `type` estável por classe (`…/boo
 2. Ler `Idempotency-Key`; se já existe **e o dono confere**, devolver a reserva (`200`) sem efeitos. Chave de outro dono → **409** (não vaza dados de terceiros).
 3. Validar: `checkOut > checkIn`, ≤ 30 noites, `adults ≥ 1`, `children ≥ 0`.
 4. Ler a cotação do período no broker v1 (`POST /v1/quotes`, tarifa por data de estadia); falha → `503`; hotel/quarto/plano inexistente → `404`; noite sem tarifa publicada → `409 rate-unavailable`. Cotação que não cobre o período ou em outra moeda é tratada como indisponibilidade.
-5. Aplicar a taxa **por noite** sobre a tarifa líquida do broker e somar (`PricingCalculator`, 500 bps, `HALF_UP`, escala 2); o detalhamento guarda uma linha por data.
+5. Aplicar a taxa **por noite** sobre a tarifa líquida do broker e somar (`PricingCalculator`, 1176 bps, `HALF_UP`, escala 2); o detalhamento guarda uma linha por data.
 6. Em **uma transação**: materializar o inventário do período e, por noite em ordem de data, `UPDATE … SET reserved = reserved + 1 WHERE … AND reserved + 1 <= capacity`; noite sem linha afetada → rollback + `409`.
 7. Inserir `booking` (`CONFIRMED`, `version = 0`) e `booking_event(CREATED)`; commit.
 8. `201` + `Location` (ou `200` no replay). Corrida entre requisições simultâneas: quem perde relê a vencedora em transação nova.
@@ -218,7 +218,7 @@ Erros sempre `application/problem+json` com `type` estável por classe (`…/boo
 | [ADR-001](adr/ADR-001-monolito-modular.md) | Monólito modular + PostgreSQL + Flyway (Postgres também em dev) | Aceita | Microsserviços + Kafka; permanecer stateless |
 | [ADR-002](adr/ADR-002-fonte-da-verdade.md) | Broker = catálogo/tarifas; reservas e inventário são fonte da verdade local | Aceita | Delegar disponibilidade ao broker (impossível: não expõe) |
 | [ADR-003](adr/ADR-003-idempotencia-e-maquina-de-estados.md) | `Idempotency-Key` + máquina de estados explícita + `@Version` | Aceita | Lock pessimista; idempotência por hash do payload |
-| [ADR-004](adr/ADR-004-semantica-da-taxa.md) | Taxa em basis points + `PricingCalculator` puro + snapshot de preço | Aceita — **valor definido: 5% (500 bps)**, DEC-0001 | Manter `0.70` como markup de 70% |
+| [ADR-004](adr/ADR-004-semantica-da-taxa.md) | Taxa em basis points + `PricingCalculator` puro + snapshot de preço | Aceita — **valor definido: 11,76% (1176 bps)**, DEC-0002 (substitui DEC-0001) | Manter `0.70` como markup de 70% |
 
 ---
 
@@ -263,7 +263,7 @@ Erros sempre `application/problem+json` com `type` estável por classe (`…/boo
 | R11 | Busca em `/api/v1/booking/{...}` (nome enganoso) | Baixa | Busca e detalhe já usam o contrato v1 (slug, período, noites). Resta o nome do caminho |
 | R12 | Legado (`endpoint`/`service`) sobreposto aos módulos novos | Baixa | O cliente REST legado, o fixture `hotels.json` e os DTOs antigos **foram removidos** no MB3.2b. Sobra a nomenclatura (`service`/`endpoint`) para a busca e o detalhe, que já delegam ao `catalog` |
 | R13 | Build nativo (`-Dnative`) não exercitado | Baixa | Perfil existe no `pom`; testar quando houver alvo de entrega |
-| R14 | **Tarifa de atacado vs. balcão** | **Alta** | a taxa de 5% só é margem se a tarifa recebida do broker for **líquida de atacado**. Com preço de balcão, o nosso preço fica ~5% **acima** do mercado e nada falha: cotação válida, `dataSource` correto, sem erro. Detector: a validação da taxa (`tools/validar-taxa.sh`) — desvio **positivo** onde se esperava negativo (ver R9 no [broker](https://github.com/zekiefa/testecvc-broker-quarkus)) |
+| R14 | **Tarifa de atacado vs. balcão** | **Alta** | a taxa só é margem se a tarifa recebida do broker for **líquida de atacado**. Com preço de balcão, o nosso preço fica ~11,76% **acima** do mercado e nada falha: cotação válida, `dataSource` correto, sem erro. Detector: a validação da taxa (`tools/validar-taxa.sh`) — desvio **positivo** onde se esperava negativo (ver R9 no [broker](https://github.com/zekiefa/testecvc-broker-quarkus)) |
 
 **Já coberto:** falha do broker, idempotência (inclusive concorrente), autorização por dono, consistência de estoque e de total, auditoria de transições, preço congelado, correlação por `traceId`, contrato publicado, CI com Sonar/CodeQL/Dependabot.
 

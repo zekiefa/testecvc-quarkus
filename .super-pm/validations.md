@@ -12,3 +12,16 @@
 - 决策变化：mantida
 - 下一步：Trocar o critério de validação: revisar a taxa quando existir broker real com inventário comparável ou quando houver dados de conversão das primeiras reservas. Manter 5% até então.
 - 关联决策：DEC-0001
+
+## VAL-0002：Coleta real com hotel comparável — Hotel Fazenda Vale da Cachoeira
+<!-- valid: VAL-0002 -->
+- 日期：2026-11-06
+- 假设：5% de markup mantém o preço final dentro de 10% do mercado para o mesmo hotel e datas.
+- 预期结果：待确认
+- 方法与样本：Hotel Fazenda Vale da Cachoeira (Serra Negra), 10-13/04/2027, 1 adulto + 1 criança, 3 noites. Coleta 05/11/2026: Booking 2.600,00 · Decolar 2.478,00 · Hoteis.com 2.476,00. Líquido não exposto pelos sites; inferido por comissão (15% / 15% / 15-20%) via líquido = bruto x (1 - comissão).
+- 判断阈值：Desvio acima de 10% em relação ao mercado reabre a decisão (critério simétrico).
+- 观察结果：Spread 5,01%. Nosso preço com 5%: 2.209,83 total (-10,75% vs 2.476). Com 20% de comissão: 2.079,84 (-16,00%). Taxas: 5,88% -> delta -10%; 11,76% -> delta -5%; 17,65% -> paridade.
+- 解释：Instrumento agora mede: mesmo hotel, spread de 5,01% entre sites (antes 167%, comparando hotéis diferentes). Resultado fora da faixa de 10%, mas na direção favorável: 10,75% ABAIXO do mercado — a taxa de 5% era conservadora. O desvio depende só de comissão e taxa: delta = (1-c)(1+f)-1. Ação: taxa para 11,76% (DEC-0002), delta ~-5,00%.
+- 决策变化：alterada: taxa 5% -> 11,76% (DEC-0002)
+- 下一步：Manter 11,76% como posição de entrada do MVP; revisar com a comissão real do broker ou com dados de conversão. Preço por canal/temporada fica para tabela de preço/desconto, fora do MVP.
+- 关联决策：DEC-0001
