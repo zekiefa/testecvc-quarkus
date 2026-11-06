@@ -1,6 +1,7 @@
 package br.com.cvc.evaluation.inventory;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 
 import java.time.LocalDate;
@@ -70,6 +71,17 @@ class AvailabilityEndpointTest {
         given().header("Authorization", bearer())
                         .when().get(query(CHECK_OUT, CHECK_IN))
                         .then().statusCode(HttpStatus.SC_BAD_REQUEST);
+    }
+
+    @Test
+    void rejectsPeriodAboveTheConfiguredLimit() {
+        final var from = LocalDate.now().plusDays(400);
+
+        given().header("Authorization", bearer())
+                        .when().get("/api/v1/hotels/1/availability?checkIn=" + from
+                                        + "&checkOut=" + from.plusDays(40))
+                        .then().statusCode(HttpStatus.SC_BAD_REQUEST)
+                        .body("detail", containsString("30"));
     }
 
     @Test

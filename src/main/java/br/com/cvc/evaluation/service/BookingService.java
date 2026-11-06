@@ -160,7 +160,7 @@ public class BookingService {
      */
     private static String safe(final String value) {
         // Remove quebras de linha e tabulações antes de logar valor vindo de entrada.
-        return value == null ? "" : value.replaceAll("[\\r\\n\\t]", "_");
+        return value.replaceAll("[\\r\\n\\t]", "_");
     }
 
     private HotelOffer price(final QuotedHotel offer, final int adults, final int children) {
