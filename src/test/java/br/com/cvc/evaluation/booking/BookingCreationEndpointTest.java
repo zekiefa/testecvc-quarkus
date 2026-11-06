@@ -74,7 +74,7 @@ class BookingCreationEndpointTest {
                         () -> assertEquals("BRL", response.currency()),
                         () -> assertEquals(3, response.nightlyBreakdown().size(), "3 noites"),
                         () -> assertEquals(0, new BigDecimal("1005.84")
-                                        .compareTo(response.nightlyBreakdown().get(0).adultAmount())),
+                                        .compareTo(response.nightlyBreakdown().getFirst().adultAmount())),
                         () -> assertEquals(0, new BigDecimal("4526.28").compareTo(response.totalAmount()),
                                         "(1005.84 + 502.92) * 3"));
     }
