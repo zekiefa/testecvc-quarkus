@@ -1,5 +1,6 @@
 package br.com.cvc.evaluation.catalog;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -49,7 +50,10 @@ public class BrokerCatalog {
                 return List.of();
             }
 
-            return response.items().stream().map(BrokerCatalog::toQuotedHotel).toList();
+            return response.items().stream()
+                            .filter(hit -> isFresh(hit.staleAfter()))
+                            .map(BrokerCatalog::toQuotedHotel)
+                            .toList();
         } catch (final WebApplicationException e) {
             if (e.getResponse() == null) {
                 throw new BrokerUnavailableException("Broker failed: " + e.getMessage());
@@ -81,6 +85,21 @@ public class BrokerCatalog {
         }
     }
 
+    /**
+     * O contrato diz que o comprador decide se confia no dado. Aqui a decisão é: dado que o
+     * próprio broker marca como vencido não é usado.
+     */
+    private static boolean isFresh(final Instant staleAfter) {
+        return staleAfter == null || Instant.now().isBefore(staleAfter);
+    }
+
+    /** Cotação vencida vira indisponibilidade: é melhor recusar do que gravar preço fora de validade. */
+    private static void requireFresh(final Instant staleAfter, final String what) {
+        if (!isFresh(staleAfter)) {
+            throw new BrokerUnavailableException("Broker returned data past its staleAfter for " + what);
+        }
+    }
+
     private static QuotedHotel toQuotedHotel(final BrokerSearchResponse.Hit hit) {
         final List<QuotedHotel.Night> nights = hit.nights() == null
                         ? List.of()
@@ -91,7 +110,8 @@ public class BrokerCatalog {
 
         return new QuotedHotel(hit.hotelId().intValue(), hit.hotelName(), hit.cityName(),
                         hit.roomTypeId().intValue(), hit.roomTypeName(), hit.ratePlanId().intValue(),
-                        hit.ratePlanName(), hit.board(), hit.cancellationPolicy(), hit.currency(), nights);
+                        hit.ratePlanName(), hit.board(), hit.cancellationPolicy(), hit.currency(),
+                        hit.dataSource(), nights);
     }
 
     /**
@@ -111,6 +131,7 @@ public class BrokerCatalog {
             if (quote == null || quote.nights() == null || quote.nights().size() != nights) {
                 throw new BrokerUnavailableException("Broker returned a quote that does not cover the period");
             }
+            requireFresh(quote.staleAfter(), "hotel " + hotelId);
             if (!this.settings.currency().equals(quote.currency())) {
                 throw new BrokerUnavailableException("Broker quoted in " + quote.currency() + ", expected "
                                 + this.settings.currency());

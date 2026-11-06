@@ -174,6 +174,13 @@ class BookingCreationEndpointTest {
     }
 
     @Test
+    void staleQuoteIsUnavailable() {
+        // o broker devolve cotacao que ele mesmo marca como vencida: nao usamos
+        post("usuario", "key-stale-quote", request(1, 1, 98, CHECK_IN, CHECK_OUT, 1, 1))
+                        .statusCode(HttpStatus.SC_SERVICE_UNAVAILABLE);
+    }
+
+    @Test
     void keepsTheOwnerFromTheToken() {
         final var created = post("usuario", "key-owner", request(1, 1, CHECK_IN, CHECK_OUT, 1, 1))
                         .statusCode(HttpStatus.SC_CREATED)
@@ -201,6 +208,11 @@ class BookingCreationEndpointTest {
 
     private static CreateBookingRequest request(final int hotelId, final int roomId, final LocalDate checkIn,
                     final LocalDate checkOut, final int adults, final int children) {
-        return new CreateBookingRequest(hotelId, roomId, 1, checkIn, checkOut, adults, children);
+        return request(hotelId, roomId, 1, checkIn, checkOut, adults, children);
+    }
+
+    private static CreateBookingRequest request(final int hotelId, final int roomId, final int ratePlanId,
+                    final LocalDate checkIn, final LocalDate checkOut, final int adults, final int children) {
+        return new CreateBookingRequest(hotelId, roomId, ratePlanId, checkIn, checkOut, adults, children);
     }
 }

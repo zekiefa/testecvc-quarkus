@@ -119,8 +119,17 @@ A reserva consulta o contrato **v1** do broker ([testecvc-broker-quarkus](https:
 BROKER_V1_URL=http://localhost:8081 mvn quarkus:dev
 ```
 
-Duas guardas de contrato: cotação que **não cobre todas as noites** e cotação em **moeda diferente**
-de `booking.currency` são tratadas como indisponibilidade (`503`), nunca como preço válido.
+Quatro guardas de contrato, todas no caminho da ACL:
+
+| Situação | Resposta |
+|---|---|
+| cotação que não cobre todas as noites | `503` |
+| cotação em moeda ≠ `booking.currency` | `503` |
+| cotação com `staleAfter` no passado | `503` — o broker marcou o dado como vencido |
+| oferta de busca vencida | descartada da lista |
+
+A resposta da nossa API também **declara a origem** do preço (`dataSource: SEED` ou `PUSH`), então a
+propriedade "dado sintético não se disfarça de real" sobrevive ao salto entre os serviços.
 
 > Busca e detalhe usam **só** o contrato v1. O cliente legado (`BROKER_LEGACY_URL`) foi removido
 > junto com o fixture `hotels.json`.

@@ -10,7 +10,8 @@ import java.util.List;
  * Regime sem tarifa publicada aparece com {@code available: false}, em vez de sumir: o
  * hóspede precisa saber que existe e não está à venda.</p>
  */
-public record HotelDetail(Long hotelId, String hotelName, String cityName, List<Room> rooms) {
+public record HotelDetail(Long hotelId, String hotelName, String cityName, String dataSource,
+                List<Room> rooms) {
 
     public record Room(Long roomId, String name, int maxAdults, int maxChildren, List<Plan> ratePlans) {
     }
