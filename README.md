@@ -46,19 +46,24 @@ Credencial inválida devolve **401 genérico**, sem revelar se o usuário existe
 
 ## Endpoints
 
-| Método | Caminho | Papel | Descrição |
-|---|---|---|---|
-| `POST` | `/auth` | público | Login; devolve o JWT |
-| `GET` | `/api/v1/hotels/{id}?checkIn&checkOut&adults&children` | `user` | Detalhe do hotel cotado para o período |
-| `GET` | `/api/v1/hotels/{id}/availability?checkIn&checkOut` | `user` | Disponibilidade por noite e por quarto |
-| `POST` | `/api/v1/bookings` | `user` | Cria reserva (exige `Idempotency-Key`) |
-| `GET` | `/api/v1/bookings/{id}` | `user` (dono) | Consulta a reserva |
-| `POST` | `/api/v1/bookings/{id}/cancel` | `user` (dono) | Cancela e devolve o estoque |
-| `POST` | `/api/v1/bookings/{id}/check-in` | `user` (dono) | Check-in na data ou depois |
-| `POST` | `/api/v1/bookings/{id}/check-out` | `user` (dono) | Exige `CHECKED_IN` |
-| `POST` | `/api/v1/bookings/{id}/no-show` | `user` (dono) | Após a data, sem check-in |
-| `GET` | `/api/v1/booking/{cityCode}/{checkIn}/{checkOut}/{adults}/{children}` | `user` | Busca por cidade (slug), melhor plano por hotel |
-| `GET` | `/q/openapi` · `/q/health` · `/q/metrics` | — | Contrato, saúde e métricas |
+Todos exigem `Authorization: Bearer <token>`, exceto `/auth` e `/q/*`.
+Os IDs correspondem a [`docs/ai/capabilities.md`](docs/ai/capabilities.md).
+
+| ID | Método | Caminho | Entrada | Sucesso | Erros |
+|---|---|---|---|---|---|
+| `RES-01` | `POST` | `/auth` | `{user, passwd}` | `200` `{type, token}` | `401` credencial inválida (sem revelar se o usuário existe) |
+| `RES-02` | `GET` | `/api/v1/booking/{cityCode}/{checkIn}/{checkOut}/{adults}/{children}` | path: slug da cidade, datas ISO, pax | `200` uma oferta **por hotel**: melhor plano, total com taxa, noites, `dataSource` | `400` data/período/pax · `503` broker fora |
+| `RES-03` | `GET` | `/api/v1/hotels/{id}?checkIn&checkOut&adults&children` | path + 4 query params (período **obrigatório**) | `200` hotel com todos os regimes cotados (`available`), `dataSource` | `400` período ausente/inválido · `404` hotel · `503` broker |
+| `RES-04` | `GET` | `/api/v1/hotels/{id}/availability?checkIn&checkOut` | path + 2 query params | `200` noites livres + mínimo do período (nosso estoque) | `400` · `404` · `503` |
+| `RES-05` | `POST` | `/api/v1/bookings` | header `Idempotency-Key` + `{hotelId, roomId, ratePlanId, checkIn, checkOut, adults, children}` | **`201`** + `Location` · **`200`** quando a chave repete | `400` validação · `404` hotel/quarto/plano · `409` sem estoque, chave de outro dono, tarifa ausente (`rate-unavailable`) · `503` broker |
+| `RES-06` | `GET` | `/api/v1/bookings/{id}` | path | `200` reserva | `404` inexistente **ou de outro dono** |
+| `RES-07` | `POST` | `/api/v1/bookings/{id}/cancel` | path | `200` status `CANCELLED` (devolve estoque) | `409` transição inválida · `404` |
+| `RES-08` | `POST` | `/api/v1/bookings/{id}/check-in` | path | `200` status `CHECKED_IN` (data de entrada ou depois) | `409` data/estado · `404` |
+| `RES-09` | `POST` | `/api/v1/bookings/{id}/check-out` | path | `200` status `CHECKED_OUT` (exige `CHECKED_IN`) | `409` · `404` |
+| `RES-10` | `POST` | `/api/v1/bookings/{id}/no-show` | path | `200` status `NO_SHOW` (após a data; **não** devolve estoque) | `409` · `404` |
+| `RES-11` | `GET` | `/q/openapi` · `/q/health` · `/q/metrics` | — | `200` contrato, saúde, métricas Prometheus | — |
+
+Corpo de erro: sempre `application/problem+json` com `type` estável, `status`, `detail` e `traceId` — ver [Erros](#erros-rfc-7807).
 
 ### Exemplo: disponibilidade
 
@@ -223,6 +228,10 @@ Detalhes e dívidas conhecidas: [`docs/arquitetura.md`](docs/arquitetura.md).
 Sem `SONAR_TOKEN` o passo de análise é pulado e o build continua verde.
 
 ## Documentação
+
+- **[Capacidades para agentes de IA](docs/ai/capabilities.md)** — features de negócio, invariantes
+  numeradas, fronteira de dados e dependência do broker, em formato compacto (leia isto antes
+  de varrer o código)
 
 - [Arquitetura v0.3](docs/arquitetura.md) — as-built, restrições, módulos, dados, riscos
   (v0.2 e v0.1 em [`docs/archive/`](docs/archive/))
