@@ -37,6 +37,7 @@ class HotelEndpointTest {
         assertEquals("Hotel Serra Verde", detail.hotelName());
         assertEquals(1, detail.rooms().size(), "um quarto no stub");
 
+        assertEquals("SEED", detail.dataSource(), "origem do dado sobrevive ao salto");
         final var plans = detail.rooms().get(0).ratePlans();
         assertEquals(2, plans.size(), "dois regimes cotados");
         for (final var plan : plans) {

@@ -31,6 +31,8 @@ public class BrokerQuoteStub implements ResponseDefinitionTransformerV2 {
     private static final long KNOWN_ROOM = 1L;
     /** Plano que simula periodo sem tarifa publicada no broker (409). */
     private static final long UNAVAILABLE_PLAN = 99L;
+    /** Plano que devolve cotacao marcada como VENCIDA, para exercitar o frescor. */
+    private static final long STALE_PLAN = 98L;
     /** Hoteis que violam o contrato de proposito, para exercitar as guardas da ACL. */
     private static final long INCOMPLETE_QUOTE_HOTEL = 998L;
     private static final long WRONG_CURRENCY_HOTEL = 997L;
@@ -81,6 +83,9 @@ public class BrokerQuoteStub implements ResponseDefinitionTransformerV2 {
             if (body.path("ratePlanId").asLong() == UNAVAILABLE_PLAN) {
                 return incompleteRatePeriod();
             }
+            if (body.path("ratePlanId").asLong() == STALE_PLAN) {
+                return quote("BRL", checkIn, nights, java.time.Instant.now().minusSeconds(60));
+            }
 
             return quote("BRL", checkIn, nights);
         } catch (final Exception e) {
@@ -89,14 +94,19 @@ public class BrokerQuoteStub implements ResponseDefinitionTransformerV2 {
     }
 
     private static ResponseDefinition quote(final String currency, final LocalDate checkIn, final long nights) {
+        return quote(currency, checkIn, nights, java.time.Instant.now().plusSeconds(900));
+    }
+
+    private static ResponseDefinition quote(final String currency, final LocalDate checkIn, final long nights,
+                    final java.time.Instant staleAfter) {
         final var nightEntries = Stream.iterate(checkIn, date -> date.plusDays(1)).limit(nights)
                         .map(date -> "{\"date\":\"%s\",\"adult\":%s,\"child\":%s}".formatted(date, ADULT, CHILD))
                         .collect(Collectors.joining(","));
 
         final var json = """
                         {"currency":"%s","totalAmount":0,"nights":[%s],
-                         "updatedAt":"2026-11-03T12:00:00Z","staleAfter":"2026-11-03T12:15:00Z",
-                         "dataSource":"SEED"}""".formatted(currency, nightEntries);
+                         "updatedAt":"%s","staleAfter":"%s","dataSource":"SEED"}"""
+                        .formatted(currency, nightEntries, staleAfter.minusSeconds(900), staleAfter);
 
         return aResponse().withStatus(200)
                         .withHeader("Content-Type", "application/json")

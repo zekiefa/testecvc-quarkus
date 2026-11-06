@@ -20,6 +20,8 @@ public class BrokerSearchStub implements ResponseDefinitionTransformerV2 {
     private static final String KNOWN_CITY = "serra-negra";
     private static final String ADULT = "900.00";
     private static final String CHILD = "450.00";
+    /** Frescor sempre no futuro: o consumidor descarta o que o broker marca como vencido. */
+    private static final String STALE_AFTER = java.time.Instant.now().plusSeconds(900).toString();
 
     @Override
     public String getName() {
@@ -52,6 +54,20 @@ public class BrokerSearchStub implements ResponseDefinitionTransformerV2 {
                             .withBody("{\"type\":\"about:blank\",\"status\":500}")
                             .build();
         }
+        if ("vencido".equals(cityCode) && nights > 0) {
+            // oferta que o proprio broker marca como vencida: o consumidor deve descartar
+            return aResponse().withStatus(200)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody("""
+                                            {"cityCode":"vencido","items":[
+                                              {"hotelId":1,"hotelName":"Vencido","cityCode":"vencido",
+                                               "cityName":"Serra Negra","roomTypeId":1,"roomTypeName":"X",
+                                               "ratePlanId":1,"ratePlanName":"Y","board":"BB",
+                                               "cancellationPolicy":"FLEXIBLE","totalAmount":0,"currency":"BRL",
+                                               "updatedAt":"2020-01-01T00:00:00Z","staleAfter":"2020-01-01T00:15:00Z",
+                                               "dataSource":"SEED","nights":[{"date":"2027-04-10","adult":900.00,"child":450.00}]}]}""")
+                            .build();
+        }
         if ("sem-noites".equals(cityCode) && nights > 0) {
             return aResponse().withStatus(200)
                             .withHeader("Content-Type", "application/json")
@@ -82,15 +98,16 @@ public class BrokerSearchStub implements ResponseDefinitionTransformerV2 {
                            "cityName":"Serra Negra","roomTypeId":1,"roomTypeName":"Standard Casal",
                            "ratePlanId":1,"ratePlanName":"Café da manhã — flexível","board":"BB",
                            "cancellationPolicy":"FLEXIBLE","totalAmount":0,"currency":"BRL",
-                           "updatedAt":"2026-11-03T12:00:00Z","staleAfter":"2026-11-03T12:15:00Z",
+                           "updatedAt":"2026-11-03T12:00:00Z","staleAfter":"%s",
                            "dataSource":"SEED","nights":[%s]},
                           {"hotelId":2,"hotelName":"Pousada Vale das Águas","cityCode":"serra-negra",
                            "cityName":"Serra Negra","roomTypeId":3,"roomTypeName":"Família",
                            "ratePlanId":5,"ratePlanName":"Somente quarto","board":"RO",
                            "cancellationPolicy":"NON_REFUNDABLE","totalAmount":0,"currency":"BRL",
-                           "updatedAt":"2026-11-03T12:00:00Z","staleAfter":"2026-11-03T12:15:00Z",
+                           "updatedAt":"2026-11-03T12:00:00Z","staleAfter":"%s",
                            "dataSource":"SEED","nights":[%s]}
-                         ]}""".formatted(cityCode, checkIn, checkOut, nightEntries, nightEntries);
+                         ]}""".formatted(cityCode, checkIn, checkOut, STALE_AFTER, nightEntries, STALE_AFTER,
+                        nightEntries);
 
         return aResponse().withStatus(200)
                         .withHeader("Content-Type", "application/json")

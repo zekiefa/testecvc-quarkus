@@ -171,7 +171,7 @@ class BookingServiceTest {
                         .toList();
 
         return new QuotedHotel(1, "Hotel Serra Verde", "Serra Negra", 1, "Standard Casal", 1, "Café", "BB",
-                        "FLEXIBLE", "BRL", quotedNights);
+                        "FLEXIBLE", "BRL", "SEED", quotedNights);
     }
 
     private static BigDecimal nightly(final String baseRate) {

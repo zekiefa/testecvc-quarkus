@@ -93,7 +93,7 @@ public class BookingService {
                                                                         children, nights)))
                                         .toList();
 
-        return new HotelDetail(hotel.id(), hotel.name(), hotel.cityName(), rooms);
+        return new HotelDetail(hotel.id(), hotel.name(), hotel.cityName(), hotel.dataSource(), rooms);
     }
 
     private List<HotelDetail.Plan> pricedPlans(final Integer hotelId, final BrokerHotelDetail.Room room,
@@ -184,7 +184,7 @@ public class BookingService {
 
         return new HotelOffer(offer.hotelId(), offer.hotelName(), offer.cityName(), offer.roomId(),
                         offer.roomTypeName(), offer.ratePlanId(), offer.ratePlanName(), offer.board(),
-                        offer.cancellationPolicy(), offer.currency(),
+                        offer.cancellationPolicy(), offer.currency(), offer.dataSource(),
                         total.setScale(2, RoundingMode.HALF_UP), List.copyOf(pricedNights));
     }
 }

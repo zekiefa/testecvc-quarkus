@@ -107,6 +107,30 @@ class BookingEndpointTest {
     }
 
     @Test
+    void staleOffersAreNotOffered() {
+        final var checkin = LocalDate.now().plusDays(2).format(DateTimeFormatter.ofPattern(DATE_FORMAT));
+        final var checkout = LocalDate.now().plusDays(5).format(DateTimeFormatter.ofPattern(DATE_FORMAT));
+
+        final var offers = given().headers("Authorization", "Bearer " + tokenBuilder.createJWT("usuario", 86400000L))
+                        .when().get(String.format("/api/v1/booking/vencido/%s/%s/1/1", checkin, checkout))
+                        .then().statusCode(HttpStatus.SC_OK)
+                        .extract().as(HotelOffer[].class);
+
+        assertEquals(0, offers.length, "oferta vencida nao e ofertada");
+    }
+
+    @Test
+    void offerCarriesTheDataSource() {
+        final var checkin = LocalDate.now().plusDays(2).format(DateTimeFormatter.ofPattern(DATE_FORMAT));
+        final var checkout = LocalDate.now().plusDays(5).format(DateTimeFormatter.ofPattern(DATE_FORMAT));
+
+        given().headers("Authorization", "Bearer " + tokenBuilder.createJWT("usuario", 86400000L))
+                        .when().get(String.format("/api/v1/booking/serra-negra/%s/%s/1/1", checkin, checkout))
+                        .then().statusCode(HttpStatus.SC_OK)
+                        .body("[0].dataSource", org.hamcrest.Matchers.is("SEED"));
+    }
+
+    @Test
     void testFindWithoutToken() {
         // Act | Asserts
         given()
