@@ -30,3 +30,4 @@ app:
 # fórmula contra este valor, não o valor como regra de negócio (ver ADR-004).
 booking:
   fee-bps: 1176
+  max-nights: 30

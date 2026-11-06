@@ -40,6 +40,9 @@ booking:
   currency: BRL
   # Capacidade por quarto/noite ao materializar o inventário (premissa, ver ADR-002)
   default-capacity: 1
+  # Período máximo de uma estadia, em noites. Limite único: reserva, criação e inventário
+  # leem daqui. Sobrescreve por ambiente com BOOKING_MAX_NIGHTS.
+  max-nights: ${BOOKING_MAX_NIGHTS:30}
   # Taxa em basis points (1176 = 11,76%) — decisão de produto registrada no ADR-004:
   # markup ao hóspede, incidindo sobre adulto e criança, fixo para todas as reservas.
   fee-bps: 1176
