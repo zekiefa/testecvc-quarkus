@@ -20,6 +20,15 @@ public interface BookingSettings {
      */
     int feeBps();
 
+    /**
+     * Período máximo de uma estadia, em noites.
+     *
+     * <p>Limite único da aplicação: reserva, criação e inventário leem daqui. Vem de
+     * {@code booking.max-nights} (ambiente: {@code BOOKING_MAX_NIGHTS}), padrão 30.</p>
+     */
+    @WithDefault("30")
+    int maxNights();
+
     /** Moeda do snapshot de preço, ISO-4217. */
     String currency();
 

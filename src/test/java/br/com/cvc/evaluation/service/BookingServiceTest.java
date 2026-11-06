@@ -86,6 +86,36 @@ class BookingServiceTest {
     }
 
     @Test
+    void roomWithoutRatePlansStillAppears() {
+        // quarto publicado sem regime: aparece sem opção de compra, em vez de sumir
+        when(this.catalog.hotelDetail(1)).thenReturn(new BrokerHotelDetail(1L, "Hotel Serra Verde", "serra-negra",
+                        "Serra Negra", null, null, "SEED",
+                        List.of(new BrokerHotelDetail.Room(1L, "Standard", 2, 1, null))));
+
+        final var detail = this.service.getHotelDetails(1, LocalDate.now(), LocalDate.now().plusDays(1), 1, 0);
+
+        assertAll("room-without-plans",
+                        () -> assertEquals(1, detail.rooms().size()),
+                        () -> assertTrue(detail.rooms().get(0).ratePlans().isEmpty()));
+    }
+
+    @Test
+    void hotelWithoutRoomsIsAnEmptyDetail() {
+        when(this.catalog.hotelDetail(1)).thenReturn(new BrokerHotelDetail(1L, "Hotel Vazio", "serra-negra",
+                        "Serra Negra", null, null, "SEED", null));
+
+        final var detail = this.service.getHotelDetails(1, LocalDate.now(), LocalDate.now().plusDays(1), 1, 0);
+
+        assertTrue(detail.rooms().isEmpty());
+    }
+
+    @Test
+    void missingDatesAreRejected() {
+        assertThrows(InvalidRequestException.class,
+                        () -> this.service.findHotels("serra-negra", null, null, 1, 0));
+    }
+
+    @Test
     void unknownHotelPropagatesNotFound() {
         when(this.catalog.hotelDetail(42)).thenThrow(new HotelNotFoundException("Hotel not found: 42"));
 

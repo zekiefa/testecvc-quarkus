@@ -18,7 +18,6 @@ import jakarta.transaction.Transactional;
  */
 @ApplicationScoped
 public class InventoryService {
-    private static final long MAX_NIGHTS = 30L;
 
     private final InventoryRepository repository;
     private final BrokerCatalog catalog;
@@ -34,8 +33,8 @@ public class InventoryService {
     /** As noites do período: {@code [checkIn, checkOut)}. */
     public List<LocalDate> nights(final LocalDate checkIn, final LocalDate checkOut) {
         final var total = ChronoUnit.DAYS.between(checkIn, checkOut);
-        if (total < 1 || total > MAX_NIGHTS) {
-            throw new IllegalArgumentException("Period must be between 1 and " + MAX_NIGHTS + " nights: " + total);
+        if (total < 1 || total > this.settings.maxNights()) {
+            throw new IllegalArgumentException("Period must be between 1 and " + this.settings.maxNights() + " nights: " + total);
         }
         return LongStream.range(0, total).mapToObj(checkIn::plusDays).toList();
     }

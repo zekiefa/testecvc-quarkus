@@ -61,7 +61,7 @@ Campos de `RES-05` (todos obrigatórios): `hotelId`, `roomId`, `ratePlanId`, `ch
 | R-07 | **Anti-overbooking**: estoque reservado por noite via `UPDATE` condicional na mesma transação; sem linha afetada → `409` | — |
 | R-08 | Estados: `CONFIRMED → CHECKED_IN → CHECKED_OUT`; `CONFIRMED → CANCELLED`; `CONFIRMED → NO_SHOW`. Fora do grafo → `409`; estados finais não reabrem | — |
 | R-09 | `CANCELLED` devolve estoque; `NO_SHOW` **não** devolve | — |
-| R-10 | Limites: período ≤ **30 noites**; `adults ≥ 1`; `children` 0–10; capacidade do quarto | `400` |
+| R-10 | Limites: período ≤ `booking.max-nights` (**padrão 30**, ambiente `BOOKING_MAX_NIGHTS`); `adults ≥ 1`; `children` 0–10; capacidade do quarto | `400` |
 | R-11 | Cotação do broker precisa cobrir **todas** as noites e estar na nossa moeda (`booking.currency`) | `503` |
 | R-12 | Cotação com `staleAfter` no passado é **recusada**; oferta de busca vencida é descartada | `503` / filtrada |
 | R-13 | Todo erro é `application/problem+json` (RFC 7807) com `type` estável e `traceId` | — |

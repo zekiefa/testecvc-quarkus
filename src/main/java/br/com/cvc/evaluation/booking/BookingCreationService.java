@@ -39,7 +39,6 @@ import org.slf4j.LoggerFactory;
 @ApplicationScoped
 public class BookingCreationService {
     private static final Logger log = LoggerFactory.getLogger(BookingCreationService.class);
-    private static final long MAX_NIGHTS = 30L;
 
     private final BookingRepository repository;
     private final BrokerCatalog catalog;
@@ -129,8 +128,8 @@ public class BookingCreationService {
             throw new BookingPeriodInvalidException("Checkout must be after checkin");
         }
         final var nights = checkIn.until(checkOut, ChronoUnit.DAYS);
-        if (nights > MAX_NIGHTS) {
-            throw new InvalidRequestException("Period must not exceed " + MAX_NIGHTS + " nights: " + nights);
+        if (nights > this.settings.maxNights()) {
+            throw new InvalidRequestException("Period must not exceed " + this.settings.maxNights() + " nights: " + nights);
         }
         return nights;
     }

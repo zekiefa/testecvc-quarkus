@@ -25,8 +25,6 @@ import org.slf4j.LoggerFactory;
 @ApplicationScoped
 public class BookingService {
     private static final Logger log = LoggerFactory.getLogger(BookingService.class);
-    /** Limite de sanidade para uma estadia; evita pedidos absurdos (ex.: 10 anos). */
-    private static final long MAX_NIGHTS = 30L;
 
     private final BrokerCatalog catalog;
     private final BookingSettings settings;
@@ -47,8 +45,8 @@ public class BookingService {
         }
 
         final var nights = checkin.until(checkout, ChronoUnit.DAYS);
-        if (nights > MAX_NIGHTS) {
-            throw new InvalidRequestException("Period must not exceed " + MAX_NIGHTS + " nights: " + nights);
+        if (nights > this.settings.maxNights()) {
+            throw new InvalidRequestException("Period must not exceed " + this.settings.maxNights() + " nights: " + nights);
         }
 
         log.info("Calculating period: checkin {}, checkout {} ({} nights)", checkin, checkout, nights);
@@ -162,7 +160,7 @@ public class BookingService {
      */
     private static String safe(final String value) {
         // Remove quebras de linha e tabulações antes de logar valor vindo de entrada.
-        return value == null ? "" : value.replaceAll("[\\r\\n\\t]", "_");
+        return value.replaceAll("[\\r\\n\\t]", "_");
     }
 
     private HotelOffer price(final QuotedHotel offer, final int adults, final int children) {
