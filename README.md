@@ -224,6 +224,10 @@ Sem `SONAR_TOKEN` o passo de análise é pulado e o build continua verde.
 
 ## Documentação
 
+- **[Capacidades para agentes de IA](docs/ai/capabilities.md)** — features de negócio, invariantes
+  numeradas, fronteira de dados e dependência do broker, em formato compacto (leia isto antes
+  de varrer o código)
+
 - [Arquitetura v0.3](docs/arquitetura.md) — as-built, restrições, módulos, dados, riscos
   (v0.2 e v0.1 em [`docs/archive/`](docs/archive/))
 - [ADRs](docs/adr/README.md) — decisões vigentes (monólito modular, fonte da verdade,
