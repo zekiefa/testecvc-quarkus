@@ -243,6 +243,7 @@ Erros sempre `application/problem+json` com `type` estável por classe (`…/boo
 | Kubernetes | mais de um ambiente com orquestração real |
 | Multi-tenant / pagamento | requisito de produto, com ADR próprio |
 | LLM no caminho da reserva | **nunca** — o modelo propõe, o serviço determinístico executa |
+| **Agente de IA (M4)** — adiado em 2026-11-06 | uma consulta que **não se expresse em formulário** (linguagem natural com restrição difusa), e ainda assim só para *interpretar* a pergunta: a execução continua no caminho determinístico, com custo por consulta mensurável e limitado |
 
 ---
 
