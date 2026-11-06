@@ -207,6 +207,22 @@ O relatório HTML/XML fica em `target/jacoco-report/`.
 
 Detalhes e dívidas conhecidas: [`docs/arquitetura.md`](docs/arquitetura.md).
 
+## Testes mutantes
+
+O PIT roda sobre o que é **puro** — cálculo de preço e máquina de estados —, porque mutar código
+com CDI/banco mede o container, não a regra:
+
+```shell
+mvn -Pmutation -Djacoco.skip=true pitest:mutationCoverage
+# relatório: target/pit-reports/index.html
+```
+
+Limiares no perfil: **100% de mutações mortas** e **90% de cobertura** nas classes mutadas.
+Dinheiro aceita rigor: mutante sobrevivente ali é asserção fraca, não questão de estilo.
+
+Roda no workflow [`mutation.yml`](.github/workflows/mutation.yml) — manual e semanal, não em
+todo PR, porque mutação é lenta e o sinal não muda a cada commit.
+
 ## CI (GitHub Actions)
 
 - [`.github/workflows/ci.yml`](.github/workflows/ci.yml) — três jobs: **Build** (`-DskipTests package`),
