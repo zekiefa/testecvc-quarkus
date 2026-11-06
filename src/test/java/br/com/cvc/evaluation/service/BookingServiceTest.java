@@ -63,7 +63,7 @@ class BookingServiceTest {
                         () -> assertEquals("Hotel Serra Verde", detail.hotelName()),
                         () -> assertEquals(2, plans.size()),
                         () -> assertTrue(plans.get(0).available()),
-                        () -> assertEquals(0, new BigDecimal("4252.50").compareTo(plans.get(0).totalAmount())),
+                        () -> assertEquals(0, new BigDecimal("4526.28").compareTo(plans.get(0).totalAmount())),
                         () -> assertEquals(3, plans.get(0).nights().size()),
                         () -> verify(this.catalog).hotelDetail(1));
     }
@@ -176,7 +176,7 @@ class BookingServiceTest {
 
     private static BigDecimal nightly(final String baseRate) {
         return new BigDecimal(baseRate)
-                        .multiply(BigDecimal.ONE.add(BigDecimal.valueOf(500).movePointLeft(4)))
+                        .multiply(BigDecimal.ONE.add(BigDecimal.valueOf(1176).movePointLeft(4)))
                         .setScale(2, java.math.RoundingMode.HALF_UP);
     }
 }

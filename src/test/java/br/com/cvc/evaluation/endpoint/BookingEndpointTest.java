@@ -46,8 +46,8 @@ class BookingEndpointTest {
         assertEquals(2, offers.length, "dois hoteis no resultado");
         for (final var offer : offers) {
             assertEquals(3, offer.nights().size(), "tres noites detalhadas");
-            assertEquals(0, new BigDecimal("4252.50").compareTo(offer.totalAmount()),
-                            "900 + 450 por noite, com 5%: 4252.50");
+            assertEquals(0, new BigDecimal("4526.28").compareTo(offer.totalAmount()),
+                            "900 + 450 por noite, com 5%: 4526.28");
         }
     }
 

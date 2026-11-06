@@ -40,9 +40,9 @@ booking:
   currency: BRL
   # Capacidade por quarto/noite ao materializar o inventário (premissa, ver ADR-002)
   default-capacity: 1
-  # Taxa em basis points (500 = 5,00%) — decisão de produto registrada no ADR-004:
+  # Taxa em basis points (1176 = 11,76%) — decisão de produto registrada no ADR-004:
   # markup ao hóspede, incidindo sobre adulto e criança, fixo para todas as reservas.
-  fee-bps: 500
+  fee-bps: 1176
 
 jwt:
   expiration: 86400000

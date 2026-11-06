@@ -29,4 +29,4 @@ app:
 # Taxa usada nos testes (500 = 5,00%, o mesmo valor de dev). Os testes verificam a
 # fórmula contra este valor, não o valor como regra de negócio (ver ADR-004).
 booking:
-  fee-bps: 500
+  fee-bps: 1176

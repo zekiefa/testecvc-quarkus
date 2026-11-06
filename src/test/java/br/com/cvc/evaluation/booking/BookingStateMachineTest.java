@@ -82,9 +82,9 @@ class BookingStateMachineTest {
     private static Booking sample() {
         final var checkIn = LocalDate.of(2026, 11, 10);
         return Booking.create("key-state", "usuario", 55, 1, checkIn, checkIn.plusDays(2), 1, 1, "BRL",
-                        new BigDecimal("2835.00"),
-                        List.of(new NightlyRate("2026-11-10", new BigDecimal("945.00"), new BigDecimal("472.50")),
-                                        new NightlyRate("2026-11-11", new BigDecimal("945.00"),
-                                                        new BigDecimal("472.50"))));
+                        new BigDecimal("3017.52"),
+                        List.of(new NightlyRate("2026-11-10", new BigDecimal("1005.84"), new BigDecimal("502.92")),
+                                        new NightlyRate("2026-11-11", new BigDecimal("1005.84"),
+                                                        new BigDecimal("502.92"))));
     }
 }
