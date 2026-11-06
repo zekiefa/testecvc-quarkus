@@ -6,7 +6,7 @@ import io.smallrye.config.WithDefault;
 /**
  * Configuração de negócio da reserva ({@code booking.*}).
  *
- * <p>Todo o prefixo {@code booking} precisa estar declarado aqui: o SmallRye valida que
+ * <p>Qualquer prefixo {@code booking} precisa estar declarado aqui: o SmallRye valida que
  * nenhuma chave sob o prefixo fique sem destino (SRCFG00050).</p>
  */
 @ConfigMapping(prefix = "booking")

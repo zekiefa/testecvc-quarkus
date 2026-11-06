@@ -6,8 +6,6 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 
 import br.com.cvc.evaluation.broker.dto.BrokerHotelDetail;
 import br.com.cvc.evaluation.catalog.HotelDetail;
@@ -146,11 +144,12 @@ public class BookingService {
 
     public List<HotelOffer> findHotels(final String cityCode, final LocalDate checkin, final LocalDate checkout,
                     final Integer adults, final Integer children) {
-        log.info("Finding hotels: city {}, checkin {}, checkout {}", safe(cityCode), checkin, checkout);
+        final var safedCityCode = safe(cityCode);
+        log.info("Finding hotels: city {}, checkin {}, checkout {}", safedCityCode, checkin, checkout);
         this.validateParty(adults, children);
         this.calculatePeriod(checkin, checkout);
 
-        final var offers = this.catalog.search(cityCode, checkin, checkout, adults, children);
+        final var offers = this.catalog.search(safedCityCode, checkin, checkout, adults, children);
         log.info("Result of searching hotels: {}", offers.size());
 
         return offers.stream().map(offer -> this.price(offer, adults, children)).toList();
@@ -161,13 +160,8 @@ public class BookingService {
      * mesmo número. Aplicar a taxa sobre o total do período daria outro valor quando a
      * diária tem dízima.
      */
-    /**
-     * Remove quebras de linha e tabulações antes de logar valor vindo de entrada.
-     *
-     * <p>Sem isso, um {@code %0d%0a} no path forja uma linha de log inteira — e quem lê o
-     * log acredita.</p>
-     */
     private static String safe(final String value) {
+        // Remove quebras de linha e tabulações antes de logar valor vindo de entrada.
         return value == null ? "" : value.replaceAll("[\\r\\n\\t]", "_");
     }
 

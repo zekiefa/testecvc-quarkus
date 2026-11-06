@@ -38,7 +38,7 @@ public class AuthenticationEndpoint {
 
     @POST
     public Response login(final Login loginAuth) {
-        if (loginAuth == null || !hasText(loginAuth.user()) || !hasText(loginAuth.passwd())) {
+        if (loginAuth == null || noText(loginAuth.user()) || noText(loginAuth.passwd())) {
             throw new InvalidRequestException("user and passwd are required");
         }
 
@@ -69,7 +69,7 @@ public class AuthenticationEndpoint {
         return Response.ok(new Token("Bearer", token)).build();
     }
 
-    private static boolean hasText(final String value) {
-        return value != null && !value.isBlank();
+    private static boolean noText(final String value) {
+        return value == null || value.isBlank();
     }
 }

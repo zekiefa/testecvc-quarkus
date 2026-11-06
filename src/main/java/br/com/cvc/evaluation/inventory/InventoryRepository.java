@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 
 /**
@@ -16,9 +15,15 @@ import jakarta.persistence.EntityManager;
  */
 @ApplicationScoped
 public class InventoryRepository {
+    private static final String HOTEL_ID = "hotelId";
+    private static final String ROOM_ID = "roomId";
+    private static final String STAY_DATE = "stayDate";
 
-    @Inject
-    EntityManager entityManager;
+    final EntityManager entityManager;
+
+    public InventoryRepository(EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
 
     /** Cria as linhas do período com a capacidade padrão, sem tocar nas que já existem. */
     public void materialize(final Integer hotelId, final Integer roomId, final List<LocalDate> nights,
@@ -29,9 +34,9 @@ public class InventoryRepository {
                             values (:hotelId, :roomId, :stayDate, :capacity, 0, 0)
                             on conflict (hotel_id, room_id, stay_date) do nothing
                             """)
-                            .setParameter("hotelId", hotelId)
-                            .setParameter("roomId", roomId)
-                            .setParameter("stayDate", night)
+                            .setParameter(HOTEL_ID, hotelId)
+                            .setParameter(ROOM_ID, roomId)
+                            .setParameter(STAY_DATE, night)
                             .setParameter("capacity", defaultCapacity)
                             .executeUpdate();
         }
@@ -52,9 +57,9 @@ public class InventoryRepository {
                            and stay_date = :stayDate
                            and reserved + 1 <= capacity
                         """)
-                        .setParameter("hotelId", hotelId)
-                        .setParameter("roomId", roomId)
-                        .setParameter("stayDate", night)
+                        .setParameter(HOTEL_ID, hotelId)
+                        .setParameter(ROOM_ID, roomId)
+                        .setParameter(STAY_DATE, night)
                         .executeUpdate() == 1;
     }
 
@@ -68,9 +73,9 @@ public class InventoryRepository {
                            and stay_date = :stayDate
                            and reserved > 0
                         """)
-                        .setParameter("hotelId", hotelId)
-                        .setParameter("roomId", roomId)
-                        .setParameter("stayDate", night)
+                        .setParameter(HOTEL_ID, hotelId)
+                        .setParameter(ROOM_ID, roomId)
+                        .setParameter(STAY_DATE, night)
                         .executeUpdate();
     }
 
@@ -86,8 +91,8 @@ public class InventoryRepository {
                            and stay_date >= :checkIn
                            and stay_date < :checkOut
                         """)
-                        .setParameter("hotelId", hotelId)
-                        .setParameter("roomId", roomId)
+                        .setParameter(HOTEL_ID, hotelId)
+                        .setParameter(ROOM_ID, roomId)
                         .setParameter("checkIn", checkIn)
                         .setParameter("checkOut", checkOut)
                         .getResultList();
@@ -111,10 +116,10 @@ public class InventoryRepository {
                         select reserved from room_inventory
                          where hotel_id = :hotelId and room_id = :roomId and stay_date = :stayDate
                         """)
-                        .setParameter("hotelId", hotelId)
-                        .setParameter("roomId", roomId)
-                        .setParameter("stayDate", night)
+                        .setParameter(HOTEL_ID, hotelId)
+                        .setParameter(ROOM_ID, roomId)
+                        .setParameter(STAY_DATE, night)
                         .getResultList();
-        return rows.isEmpty() ? 0 : rows.get(0).intValue();
+        return rows.isEmpty() ? 0 : rows.getFirst().intValue();
     }
 }
