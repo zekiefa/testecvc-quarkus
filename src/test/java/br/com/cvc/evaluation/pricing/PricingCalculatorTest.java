@@ -1,8 +1,9 @@
 package br.com.cvc.evaluation.pricing;
 
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -11,98 +12,101 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
- * Testes do cálculo de preço.
+ * Fixa a <b>fórmula</b> do ADR-004, não o valor comercial: a taxa é parâmetro
+ * (configuração atual: 1176 bps = 11,76%).
  *
- * <p>Deliberadamente <b>sem</b> {@code @QuarkusTest}: o cálculo é puro, então o teste deve
- * ser rápido e não depender de CDI, broker ou banco.</p>
- *
- * <p>{@code FEE_BPS} é valor de <b>teste</b>, não regra de negócio: o valor comercial da taxa
- * foi decidido pelo produto (ADR-004: 1176 bps). Estes testes fixam a <b>fórmula</b>.</p>
+ * <p>Testa o que a produção usa — {@code nightlyRate} e {@code nightlyTotal} — e não um
+ * atalho que existia só para o teste anterior.</p>
  */
 class PricingCalculatorTest {
     private static final int FEE_BPS = 1176; // 11,76%
 
     @Test
-    @DisplayName("1 noite, 1 adulto + 1 criança: diárias e total com taxa")
-    void oneNightIncludesFee() {
-        final var quote = PricingCalculator.quote(money("900.00"), money("450.00"), 1, 1, 1, FEE_BPS);
-
-        assertEquals(money("1005.84"), quote.pricePerDayAdult(), "900.00 + 11,76% = 1005.84");
-        assertEquals(money("502.92"), quote.pricePerDayChild(), "450.00 + 11,76% = 502.92");
-        assertEquals(money("1508.76"), quote.totalAmount());
-        assertEquals(1L, quote.nights());
+    @DisplayName("Diária com taxa: 900,00 e 450,00 sobem para 1005,84 e 502,92")
+    void nightlyRateAppliesFee() {
+        assertAll("nightly",
+                        () -> assertEquals(money("1005.84"),
+                                        PricingCalculator.nightlyRate(money("900.00"), FEE_BPS),
+                                        "900.00 + 11,76% = 1005.84"),
+                        () -> assertEquals(money("502.92"),
+                                        PricingCalculator.nightlyRate(money("450.00"), FEE_BPS),
+                                        "450.00 + 11,76% = 502.92"));
     }
 
     @Test
-    @DisplayName("3 noites: o total inclui a taxa (regressão do bug em que o total a excluía)")
-    void threeNightsIncludeFeeInTotal() {
-        final var quote = PricingCalculator.quote(money("900.00"), money("450.00"), 1, 1, 3, FEE_BPS);
+    @DisplayName("Noite com 1 adulto + 1 criança soma as duas diárias")
+    void nightlyTotalAddsBothPax() {
+        final var adult = PricingCalculator.nightlyRate(money("900.00"), FEE_BPS);
+        final var child = PricingCalculator.nightlyRate(money("450.00"), FEE_BPS);
 
-        assertEquals(money("4526.28"), quote.totalAmount(), "(1005.84 + 502.92) * 3");
-        assertNotEquals(money("4050.00"), quote.totalAmount(),
-                        "4050.00 era o valor antigo, calculado sem a taxa");
+        assertEquals(money("1508.76"), PricingCalculator.nightlyTotal(adult, child, 1, 1));
     }
 
     @Test
-    @DisplayName("Total fecha exatamente com as diárias informadas (invariante do ADR-004)")
-    void totalMatchesNightlyRates() {
-        final var adults = 2;
-        final var children = 1;
-        final var nights = 4L;
-        final var quote = PricingCalculator.quote(money("900.00"), money("450.00"), adults, children, nights, FEE_BPS);
+    @DisplayName("Três noites: total é a soma das noites, com a taxa incluída")
+    void threeNightsIncludeFee() {
+        final var adult = PricingCalculator.nightlyRate(money("900.00"), FEE_BPS);
+        final var child = PricingCalculator.nightlyRate(money("450.00"), FEE_BPS);
+        final var night = PricingCalculator.nightlyTotal(adult, child, 1, 1);
 
-        final var expected = quote.pricePerDayAdult().multiply(BigDecimal.valueOf(adults))
-                        .add(quote.pricePerDayChild().multiply(BigDecimal.valueOf(children)))
-                        .multiply(BigDecimal.valueOf(nights))
-                        .setScale(2, RoundingMode.HALF_UP);
+        final var total = night.multiply(BigDecimal.valueOf(3)).setScale(2, RoundingMode.HALF_UP);
 
-        assertEquals(expected, quote.totalAmount());
+        assertAll("three-nights",
+                        () -> assertEquals(money("4526.28"), total, "(1005.84 + 502.92) * 3"),
+                        () -> assertTrue(new BigDecimal("4050.00").compareTo(total) != 0,
+                                        "4050.00 era o valor antigo, calculado sem a taxa"));
     }
 
     @Test
-    @DisplayName("Arredondamento HALF_UP por diária (nunca no total)")
+    @DisplayName("Criança sem tarifa informada não inventa preço")
+    void childWithoutRateIsZeroed() {
+        final var adult = PricingCalculator.nightlyRate(money("900.00"), FEE_BPS);
+        final var zero = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+
+        // 1 adulto + 1 criança, mas sem tarifa infantil: a criança não acrescenta nada
+        assertEquals(money("1005.84"), PricingCalculator.nightlyTotal(adult, zero, 1, 1));
+        assertEquals(zero, PricingCalculator.nightlyTotal(zero, zero, 0, 1), "sem tarifa e sem adulto, zero");
+    }
+
+    @Test
+    @DisplayName("Taxa zero devolve a tarifa base, sem alterar escala")
+    void zeroFeeKeepsBaseRate() {
+        final var rate = PricingCalculator.nightlyRate(money("900.00"), 0);
+
+        assertEquals(money("900.00"), rate);
+        assertEquals(2, rate.scale(), "escala monetária é sempre 2");
+    }
+
+    @Test
+    @DisplayName("Arredondamento é HALF_UP na diária, não no total")
     void roundsHalfUpPerNightlyRate() {
-        // 259.67 * 1.05 = 290.2135 -> 290.21
+        // 259.67 * 1.1176 = 290.2072... -> 290.21
         assertEquals(money("290.21"), PricingCalculator.nightlyRate(money("259.67"), FEE_BPS));
-    }
-
-    @Test
-    @DisplayName("Sem crianças, a diária de criança é zero e não entra no total")
-    void zeroChildrenChargesNoChildRate() {
-        final var quote = PricingCalculator.quote(money("900.00"), null, 1, 0, 2, FEE_BPS);
-
-        assertEquals(money("0.00"), quote.pricePerDayChild());
-        assertEquals(money("2011.68"), quote.totalAmount());
-    }
-
-    @Test
-    @DisplayName("Taxa zero usa a tarifa base")
-    void zeroFeeUsesBaseRate() {
-        assertEquals(money("900.00"), PricingCalculator.nightlyRate(money("900.00"), 0));
     }
 
     @Test
     @DisplayName("Basis points fracionários são aceitos (275 = 2,75%)")
     void acceptsFractionalBasisPoints() {
-        // 900.00 * 1.0275 = 924.75
         assertEquals(money("924.75"), PricingCalculator.nightlyRate(money("900.00"), 275));
     }
 
     @Test
     void rejectsNegativeFee() {
-        assertThrows(IllegalArgumentException.class, () -> PricingCalculator.nightlyRate(money("900.00"), -1));
+        assertThrows(IllegalArgumentException.class,
+                        () -> PricingCalculator.nightlyRate(money("900.00"), -1));
     }
 
     @Test
-    void rejectsZeroNights() {
-        assertThrows(IllegalArgumentException.class,
-                        () -> PricingCalculator.quote(money("900.00"), money("450.00"), 1, 1, 0, FEE_BPS));
+    void rejectsNullRate() {
+        assertThrows(NullPointerException.class, () -> PricingCalculator.nightlyRate(null, FEE_BPS));
     }
 
     @Test
-    void rejectsQuoteWithoutPax() {
-        assertThrows(IllegalArgumentException.class,
-                        () -> PricingCalculator.quote(money("900.00"), money("450.00"), 0, 0, 1, FEE_BPS));
+    @DisplayName("Sem pax, a noite custa zero — nunca um valor inventado")
+    void zeroPaxCostsZero() {
+        final var adult = PricingCalculator.nightlyRate(money("900.00"), FEE_BPS);
+
+        assertEquals(money("0.00"), PricingCalculator.nightlyTotal(adult, adult, 0, 0));
     }
 
     private static BigDecimal money(final String value) {

@@ -6,7 +6,7 @@
 
 | | |
 |---|---|
-| Java | 21 |
+| Java | **25** (LTS) |
 | Quarkus | 3.40.1.1 |
 | Banco | PostgreSQL 16 via Dev Services (nada de H2) |
 | Schema | Flyway (migrações `V1`–`V4`); o Hibernate nunca altera o schema |
@@ -16,7 +16,7 @@
 
 ## Requisitos
 
-- **JDK 21** e **Maven 3.9+**
+- **JDK 25** (LTS) e **Maven 3.9+**
 - **Docker em execução** — o PostgreSQL sobe sozinho via Dev Services, inclusive nos testes.
   Sem o daemon, a suíte **não roda** (veja [Testes](#testes)).
 
@@ -206,6 +206,22 @@ O relatório HTML/XML fica em `target/jacoco-report/`.
 | `endpoint` / `service` / `domain` / `broker` | Camada legada (busca, detalhe, autenticação) coexistindo com os módulos novos |
 
 Detalhes e dívidas conhecidas: [`docs/arquitetura.md`](docs/arquitetura.md).
+
+## Testes mutantes
+
+O PIT roda sobre o que é **puro** — cálculo de preço e máquina de estados —, porque mutar código
+com CDI/banco mede o container, não a regra:
+
+```shell
+mvn -Pmutation -Djacoco.skip=true pitest:mutationCoverage
+# relatório: target/pit-reports/index.html
+```
+
+Limiares no perfil: **100% de mutações mortas** e **90% de cobertura** nas classes mutadas.
+Dinheiro aceita rigor: mutante sobrevivente ali é asserção fraca, não questão de estilo.
+
+Roda no workflow [`mutation.yml`](.github/workflows/mutation.yml) — manual e semanal, não em
+todo PR, porque mutação é lenta e o sinal não muda a cada commit.
 
 ## CI (GitHub Actions)
 

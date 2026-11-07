@@ -25,11 +25,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Configurar JDK 21
+      - name: Configurar JDK 25
         uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '25'
           cache: maven
 
       - name: Empacotar (sem testes)
@@ -50,11 +50,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Configurar JDK 21
+      - name: Configurar JDK 25
         uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '25'
           cache: maven
 
       - name: Testes
@@ -87,11 +87,11 @@ jobs:
           # histórico completo: o Sonar usa o blame para atribuir código novo
           fetch-depth: 0
 
-      - name: Configurar JDK 21
+      - name: Configurar JDK 25
         uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '25'
           cache: maven
 
       - name: Baixar cobertura dos testes

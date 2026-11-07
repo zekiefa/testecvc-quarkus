@@ -7,7 +7,7 @@
 | Status | **M0, M1, M2 e M3 implementados e mergeados na `main`**; CI ativo; M4 (IA) pausado |
 | Documentos relacionados | [ADR-001](adr/ADR-001-monolito-modular.md) · [ADR-002](adr/ADR-002-fonte-da-verdade.md) · [ADR-003](adr/ADR-003-idempotencia-e-maquina-de-estados.md) · [ADR-004](adr/ADR-004-semantica-da-taxa.md) |
 | Decisões de produto | [.super-pm/decisions.pt-BR.md](../.super-pm/decisions.pt-BR.md) (DEC-0002: taxa de 11,76%, que substitui a DEC-0001) |
-| Base analisada | commit da `main` após o merge do PR #25 (Quarkus 3.40.1.1, Java 21) |
+| Base analisada | commit da `main` após o merge do PR #34 (Quarkus 3.40.1.1, Java **25**) |
 | Versões anteriores | [archive/arquitetura-v0.1.md](archive/arquitetura-v0.1.md) · [archive/arquitetura-v0.2.md](archive/arquitetura-v0.2.md) |
 
 ## Histórico de versões
@@ -64,7 +64,7 @@ O que a v0.2 chamava de "alvo" está entregue. Estado verificado na `main`:
 
 | # | Restrição | Origem |
 |---|---|---|
-| C1 | Java 21 + **Quarkus 3.40.1.1**, build Maven | `pom.xml` |
+| C1 | Java **25** (LTS) + **Quarkus 3.40.1.1**, build Maven | `pom.xml` |
 | C2 | O **broker externo não é controlado** por nós: contrato e disponibilidade desconhecidos, sem SLA. Desde 2026-11-03 existe um **projeto nosso** para construir esse broker — [testecvc-broker-quarkus](https://github.com/zekiefa/testecvc-broker-quarkus) | `application.yml` → `http://localhost:3000` |
 | C3 | O broker **não expõe estoque/disponibilidade** → inventário tem de ser nosso | ADR-002 |
 | C4 | Equipe de 1 pessoa; projeto tem finalidade de estudo | contexto do projeto |

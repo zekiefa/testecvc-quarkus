@@ -53,11 +53,11 @@ class BookingPersistenceTest {
                         () -> assertEquals(1, reloaded.children),
                         () -> assertEquals(0, new BigDecimal("3017.52").compareTo(reloaded.totalAmount)),
                         () -> assertEquals(2, reloaded.nightlyBreakdown.size()),
-                        () -> assertEquals("2026-11-10", reloaded.nightlyBreakdown.get(0).stayDate()),
+                        () -> assertEquals("2026-11-10", reloaded.nightlyBreakdown.getFirst().stayDate()),
                         () -> assertEquals(0, new BigDecimal("1005.84")
-                                        .compareTo(reloaded.nightlyBreakdown.get(0).adultAmount())),
+                                        .compareTo(reloaded.nightlyBreakdown.getFirst().adultAmount())),
                         () -> assertEquals(0, new BigDecimal("502.92")
-                                        .compareTo(reloaded.nightlyBreakdown.get(0).childAmount())),
+                                        .compareTo(reloaded.nightlyBreakdown.getFirst().childAmount())),
                         () -> assertNotNull(reloaded.createdAt),
                         () -> assertNotNull(reloaded.updatedAt),
                         () -> assertEquals(0L, reloaded.version));

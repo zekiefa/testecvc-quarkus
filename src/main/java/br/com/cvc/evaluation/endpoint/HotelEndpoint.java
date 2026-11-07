@@ -54,7 +54,7 @@ public class HotelEndpoint {
         }
         try {
             return LocalDate.parse(value, DATE_FORMAT);
-        } catch (final DateTimeParseException e) {
+        } catch (final DateTimeParseException _) {
             throw new InvalidRequestException(parameter + " must be an ISO-8601 date (yyyy-MM-dd): " + value);
         }
     }

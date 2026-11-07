@@ -57,14 +57,14 @@ class BookingServiceTest {
 
         final var detail = this.service.getHotelDetails(1, checkIn, checkOut, 1, 1);
 
-        final var plans = detail.rooms().get(0).ratePlans();
+        final var plans = detail.rooms().getFirst().ratePlans();
         assertAll("hotel-detail",
                         () -> assertEquals(1L, detail.hotelId()),
                         () -> assertEquals("Hotel Serra Verde", detail.hotelName()),
                         () -> assertEquals(2, plans.size()),
-                        () -> assertTrue(plans.get(0).available()),
-                        () -> assertEquals(0, new BigDecimal("4526.28").compareTo(plans.get(0).totalAmount())),
-                        () -> assertEquals(3, plans.get(0).nights().size()),
+                        () -> assertTrue(plans.getFirst().available()),
+                        () -> assertEquals(0, new BigDecimal("4526.28").compareTo(plans.getFirst().totalAmount())),
+                        () -> assertEquals(3, plans.getFirst().nights().size()),
                         () -> verify(this.catalog).hotelDetail(1));
     }
 
@@ -78,11 +78,11 @@ class BookingServiceTest {
 
         final var detail = this.service.getHotelDetails(1, checkIn, checkOut, 1, 1);
 
-        final var plans = detail.rooms().get(0).ratePlans();
+        final var plans = detail.rooms().getFirst().ratePlans();
         assertAll("unavailable-plan",
                         () -> assertEquals(2, plans.size(), "regime sem tarifa nao some da resposta"),
-                        () -> assertFalse(plans.get(0).available()),
-                        () -> assertTrue(plans.get(0).nights().isEmpty()));
+                        () -> assertFalse(plans.getFirst().available()),
+                        () -> assertTrue(plans.getFirst().nights().isEmpty()));
     }
 
     @Test
@@ -96,7 +96,7 @@ class BookingServiceTest {
 
         assertAll("room-without-plans",
                         () -> assertEquals(1, detail.rooms().size()),
-                        () -> assertTrue(detail.rooms().get(0).ratePlans().isEmpty()));
+                        () -> assertTrue(detail.rooms().getFirst().ratePlans().isEmpty()));
     }
 
     @Test
@@ -136,9 +136,9 @@ class BookingServiceTest {
 
         assertAll("search",
                         () -> assertEquals(1, offers.size()),
-                        () -> assertEquals(expectedNight.multiply(BigDecimal.valueOf(3)), offers.get(0).totalAmount()),
-                        () -> assertEquals(nightly("900.00"), offers.get(0).nights().get(0).adult()),
-                        () -> assertEquals(3, offers.get(0).nights().size()),
+                        () -> assertEquals(expectedNight.multiply(BigDecimal.valueOf(3)), offers.getFirst().totalAmount()),
+                        () -> assertEquals(nightly("900.00"), offers.getFirst().nights().getFirst().adult()),
+                        () -> assertEquals(3, offers.getFirst().nights().size()),
                         () -> verify(this.catalog).search("serra-negra", checkIn, checkOut, 3, 2));
     }
 

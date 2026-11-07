@@ -3,7 +3,7 @@ project: testecvc-quarkus
 role: booking-service          # lado do hóspede
 doc_version: 1
 updated: 2026-11-06
-stack: Java 21 · Quarkus 3.40 · PostgreSQL 16 · Flyway
+stack: Java 25 · Quarkus 3.40 · PostgreSQL 16 · Flyway
 depends_on:
   - project: testecvc-broker-quarkus
     provides: catálogo, tarifas por data, cotação, disponibilidade publicada

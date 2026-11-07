@@ -72,32 +72,4 @@ public final class PricingCalculator {
      * @param nights        noites do período ({@code >= 1})
      * @param feeBps        taxa em basis points ({@code >= 0})
      */
-    public static RoomQuote quote(final BigDecimal adultBaseRate,
-                    final BigDecimal childBaseRate,
-                    final int adults,
-                    final int children,
-                    final long nights,
-                    final int feeBps) {
-        if (adults < 0 || children < 0) {
-            throw new IllegalArgumentException("adults and children must not be negative");
-        }
-        if (nights < 1) {
-            throw new IllegalArgumentException("nights must be at least 1: " + nights);
-        }
-        if (adults == 0 && children == 0) {
-            throw new IllegalArgumentException("at least one pax is required");
-        }
-
-        final var adultNightlyRate = adults > 0
-                        ? nightlyRate(adultBaseRate, feeBps)
-                        : BigDecimal.ZERO.setScale(MONEY_SCALE, MONEY_ROUNDING);
-        final var childNightlyRate = children > 0
-                        ? nightlyRate(childBaseRate, feeBps)
-                        : BigDecimal.ZERO.setScale(MONEY_SCALE, MONEY_ROUNDING);
-
-        final var nightTotal = nightlyTotal(adultNightlyRate, childNightlyRate, adults, children);
-        final var total = nightTotal.multiply(BigDecimal.valueOf(nights)).setScale(MONEY_SCALE, MONEY_ROUNDING);
-
-        return new RoomQuote(total, adultNightlyRate, childNightlyRate, nights);
-    }
 }

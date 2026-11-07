@@ -38,7 +38,7 @@ class HotelEndpointTest {
         assertEquals(1, detail.rooms().size(), "um quarto no stub");
 
         assertEquals("SEED", detail.dataSource(), "origem do dado sobrevive ao salto");
-        final var plans = detail.rooms().get(0).ratePlans();
+        final var plans = detail.rooms().getFirst().ratePlans();
         assertEquals(2, plans.size(), "dois regimes cotados");
         for (final var plan : plans) {
             assertTrue(plan.available(), "regime com tarifa publicada");
@@ -54,6 +54,14 @@ class HotelEndpointTest {
                         .when().get("/api/v1/hotels/1")
                         .then().statusCode(HttpStatus.SC_BAD_REQUEST)
                         .body("type", containsString("/invalid-request"));
+    }
+
+    @Test
+    void rejectsMalformedDate() {
+        given().headers("Authorization", "Bearer " + bearer())
+                        .when().get("/api/v1/hotels/1?checkIn=10/02/2027&checkOut=2027-02-13")
+                        .then().statusCode(HttpStatus.SC_BAD_REQUEST)
+                        .body("detail", containsString("ISO-8601"));
     }
 
     @Test
