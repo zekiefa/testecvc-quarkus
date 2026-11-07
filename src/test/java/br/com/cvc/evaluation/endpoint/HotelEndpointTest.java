@@ -57,6 +57,14 @@ class HotelEndpointTest {
     }
 
     @Test
+    void rejectsMalformedDate() {
+        given().headers("Authorization", "Bearer " + bearer())
+                        .when().get("/api/v1/hotels/1?checkIn=10/02/2027&checkOut=2027-02-13")
+                        .then().statusCode(HttpStatus.SC_BAD_REQUEST)
+                        .body("detail", containsString("ISO-8601"));
+    }
+
+    @Test
     void unknownHotelIsNotFound() {
         final var checkIn = LocalDate.now().plusDays(10);
 
