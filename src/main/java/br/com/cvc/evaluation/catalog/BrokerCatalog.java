@@ -100,10 +100,10 @@ public class BrokerCatalog {
     }
 
     private static QuotedHotel toQuotedHotel(final BrokerSearchResponse.Hit hit) {
-        final List<QuotedHotel.Night> nights = hit.nights() == null
+        final List<QuotedNight> nights = hit.nights() == null
                         ? List.of()
                         : hit.nights().stream()
-                                        .map(night -> new QuotedHotel.Night(night.date(), night.adult(),
+                                        .map(night -> new QuotedNight(night.date(), night.adult(),
                                                         night.child()))
                                         .toList();
 

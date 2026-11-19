@@ -12,7 +12,4 @@ import java.util.List;
 public record HotelOffer(Integer hotelId, String hotelName, String cityName, Integer roomId, String roomTypeName,
                 Integer ratePlanId, String ratePlanName, String board, String cancellationPolicy, String currency,
                 String dataSource, BigDecimal totalAmount, List<PricedNight> nights) {
-
-    public record PricedNight(String date, BigDecimal adult, BigDecimal child) {
-    }
 }

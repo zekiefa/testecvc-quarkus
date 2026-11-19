@@ -1,10 +1,6 @@
 package br.com.cvc.evaluation.exceptions;
 
-import java.io.Serializable;
-
-public class CustomException
-                extends RuntimeException
-                implements Serializable {
+public class CustomException extends RuntimeException {
     private final int statusCode;
 
     /**
