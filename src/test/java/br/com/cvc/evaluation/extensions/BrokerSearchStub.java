@@ -18,8 +18,6 @@ import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
 public class BrokerSearchStub implements ResponseDefinitionTransformerV2 {
 
     private static final String KNOWN_CITY = "serra-negra";
-    private static final String ADULT = "900.00";
-    private static final String CHILD = "450.00";
     /** Frescor sempre no futuro: o consumidor descarta o que o broker marca como vencido. */
     private static final String STALE_AFTER = java.time.Instant.now().plusSeconds(900).toString();
 
@@ -87,9 +85,7 @@ public class BrokerSearchStub implements ResponseDefinitionTransformerV2 {
                             .build();
         }
 
-        final var nightEntries = Stream.iterate(checkIn, date -> date.plusDays(1)).limit(nights)
-                        .map(date -> "{\"date\":\"%s\",\"adult\":%s,\"child\":%s}".formatted(date, ADULT, CHILD))
-                        .collect(Collectors.joining(","));
+        final var nightEntries = BrokerJson.nights(checkIn, nights);
 
         final var json = """
                         {"cityCode":"%s","checkIn":"%s","checkOut":"%s","adults":1,"children":1,
