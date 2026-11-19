@@ -38,7 +38,7 @@ class MaxNightsFromConfigTest {
 
     @Test
     void periodAboveTheConfiguredLimitIsRejected() {
-        given().header("Authorization", bearer())
+        given().header("Authorization", this.tokenBuilder.bearer("usuario"))
                         .header("Idempotency-Key", "max-nights-6")
                         .contentType(ContentType.JSON)
                         .body(new CreateBookingRequest(1, 1, 1, CHECK_IN, CHECK_IN.plusDays(6), 1, 1))
@@ -49,7 +49,7 @@ class MaxNightsFromConfigTest {
 
     @Test
     void periodWithinTheConfiguredLimitIsAccepted() {
-        given().header("Authorization", bearer())
+        given().header("Authorization", this.tokenBuilder.bearer("usuario"))
                         .header("Idempotency-Key", "max-nights-5")
                         .contentType(ContentType.JSON)
                         .body(new CreateBookingRequest(1, 1, 1, CHECK_IN, CHECK_IN.plusDays(5), 1, 1))
@@ -57,7 +57,4 @@ class MaxNightsFromConfigTest {
                         .then().statusCode(HttpStatus.SC_CREATED);
     }
 
-    private String bearer() {
-        return "Bearer " + this.tokenBuilder.createJWT("usuario", 86400000L);
-    }
 }

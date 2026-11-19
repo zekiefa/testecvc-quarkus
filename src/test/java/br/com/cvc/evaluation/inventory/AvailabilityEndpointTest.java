@@ -45,7 +45,7 @@ class AvailabilityEndpointTest {
     @Test
     void reportsTheDefaultCapacityWhenNothingIsReserved() {
         given()
-                        .header("Authorization", bearer())
+                        .header("Authorization", this.tokenBuilder.bearer("usuario"))
                         .when().get(query(CHECK_IN, CHECK_OUT))
                         .then().statusCode(HttpStatus.SC_OK)
                         .body("rooms[0].roomId", is(1))
@@ -58,7 +58,7 @@ class AvailabilityEndpointTest {
         QuarkusTransaction.requiringNew().run(() -> this.repository.hold(1, 1, CHECK_IN));
 
         given()
-                        .header("Authorization", bearer())
+                        .header("Authorization", this.tokenBuilder.bearer("usuario"))
                         .when().get(query(CHECK_IN, CHECK_OUT))
                         .then().statusCode(HttpStatus.SC_OK)
                         .body("rooms[0].nights[0].available", is(0))
@@ -68,7 +68,7 @@ class AvailabilityEndpointTest {
 
     @Test
     void rejectsInvertedPeriod() {
-        given().header("Authorization", bearer())
+        given().header("Authorization", this.tokenBuilder.bearer("usuario"))
                         .when().get(query(CHECK_OUT, CHECK_IN))
                         .then().statusCode(HttpStatus.SC_BAD_REQUEST);
     }
@@ -77,7 +77,7 @@ class AvailabilityEndpointTest {
     void rejectsPeriodAboveTheConfiguredLimit() {
         final var from = LocalDate.now().plusDays(400);
 
-        given().header("Authorization", bearer())
+        given().header("Authorization", this.tokenBuilder.bearer("usuario"))
                         .when().get("/api/v1/hotels/1/availability?checkIn=" + from
                                         + "&checkOut=" + from.plusDays(40))
                         .then().statusCode(HttpStatus.SC_BAD_REQUEST)
@@ -86,21 +86,21 @@ class AvailabilityEndpointTest {
 
     @Test
     void rejectsMalformedDate() {
-        given().header("Authorization", bearer())
+        given().header("Authorization", this.tokenBuilder.bearer("usuario"))
                         .when().get("/api/v1/hotels/1/availability?checkIn=10/02/2027&checkOut=2027-02-13")
                         .then().statusCode(HttpStatus.SC_BAD_REQUEST);
     }
 
     @Test
     void returnsNotFoundForUnknownHotel() {
-        given().header("Authorization", bearer())
+        given().header("Authorization", this.tokenBuilder.bearer("usuario"))
                         .when().get("/api/v1/hotels/42/availability?checkIn=" + CHECK_IN + "&checkOut=" + CHECK_OUT)
                         .then().statusCode(HttpStatus.SC_NOT_FOUND);
     }
 
     @Test
     void returnsServiceUnavailableWhenBrokerFails() {
-        given().header("Authorization", bearer())
+        given().header("Authorization", this.tokenBuilder.bearer("usuario"))
                         .when().get("/api/v1/hotels/999/availability?checkIn=" + CHECK_IN + "&checkOut=" + CHECK_OUT)
                         .then().statusCode(HttpStatus.SC_SERVICE_UNAVAILABLE);
     }
@@ -115,7 +115,4 @@ class AvailabilityEndpointTest {
         return URL + "?checkIn=" + checkIn + "&checkOut=" + checkOut;
     }
 
-    private String bearer() {
-        return "Bearer " + this.tokenBuilder.createJWT("usuario", 86400000L);
-    }
 }

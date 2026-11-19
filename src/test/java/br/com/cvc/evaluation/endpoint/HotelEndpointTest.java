@@ -27,7 +27,7 @@ class HotelEndpointTest {
         final var checkIn = LocalDate.now().plusDays(10);
         final var checkOut = checkIn.plusDays(3);
 
-        final var detail = given().headers("Authorization", "Bearer " + bearer())
+        final var detail = given().headers("Authorization", this.tokenBuilder.bearer("usuario"))
                         .when().get("/api/v1/hotels/1?checkIn=" + checkIn + "&checkOut=" + checkOut
                                         + "&adults=1&children=1")
                         .then().statusCode(HttpStatus.SC_OK)
@@ -50,7 +50,7 @@ class HotelEndpointTest {
 
     @Test
     void periodIsRequired() {
-        given().headers("Authorization", "Bearer " + bearer())
+        given().headers("Authorization", this.tokenBuilder.bearer("usuario"))
                         .when().get("/api/v1/hotels/1")
                         .then().statusCode(HttpStatus.SC_BAD_REQUEST)
                         .body("type", containsString("/invalid-request"));
@@ -58,7 +58,7 @@ class HotelEndpointTest {
 
     @Test
     void rejectsMalformedDate() {
-        given().headers("Authorization", "Bearer " + bearer())
+        given().headers("Authorization", this.tokenBuilder.bearer("usuario"))
                         .when().get("/api/v1/hotels/1?checkIn=10/02/2027&checkOut=2027-02-13")
                         .then().statusCode(HttpStatus.SC_BAD_REQUEST)
                         .body("detail", containsString("ISO-8601"));
@@ -68,7 +68,7 @@ class HotelEndpointTest {
     void unknownHotelIsNotFound() {
         final var checkIn = LocalDate.now().plusDays(10);
 
-        given().headers("Authorization", "Bearer " + bearer())
+        given().headers("Authorization", this.tokenBuilder.bearer("usuario"))
                         .when().get("/api/v1/hotels/42?checkIn=" + checkIn + "&checkOut=" + checkIn.plusDays(2))
                         .then().statusCode(HttpStatus.SC_NOT_FOUND);
     }
@@ -81,7 +81,4 @@ class HotelEndpointTest {
                         .then().statusCode(HttpStatus.SC_UNAUTHORIZED);
     }
 
-    private String bearer() {
-        return this.tokenBuilder.createJWT("usuario", 86400000L);
-    }
 }

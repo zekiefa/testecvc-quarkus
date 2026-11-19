@@ -50,7 +50,7 @@ class ProblemDetailsTest {
 
     @Test
     void domainErrorCarriesAStableType() {
-        given().header("Authorization", bearer())
+        given().header("Authorization", this.tokenBuilder.bearer("usuario"))
                         .header("Idempotency-Key", "problem-period")
                         .contentType(ContentType.JSON)
                         .body(new CreateBookingRequest(1, 1, 1, CHECK_IN, CHECK_IN, 1, 1))
@@ -65,7 +65,7 @@ class ProblemDetailsTest {
 
     @Test
     void missingHeaderIsAProblemToo() {
-        given().header("Authorization", bearer())
+        given().header("Authorization", this.tokenBuilder.bearer("usuario"))
                         .contentType(ContentType.JSON)
                         .body(new CreateBookingRequest(1, 1, 1, CHECK_IN, CHECK_IN.plusDays(2), 1, 1))
                         .when().post(BOOKINGS)
@@ -77,7 +77,7 @@ class ProblemDetailsTest {
 
     @Test
     void validationFailureNamesTheField() {
-        given().header("Authorization", bearer())
+        given().header("Authorization", this.tokenBuilder.bearer("usuario"))
                         .header("Idempotency-Key", "problem-validation")
                         .contentType(ContentType.JSON)
                         .body("""
@@ -93,7 +93,7 @@ class ProblemDetailsTest {
 
     @Test
     void unknownBookingIsProblemJson() {
-        given().header("Authorization", bearer())
+        given().header("Authorization", this.tokenBuilder.bearer("usuario"))
                         .when().get(BOOKINGS + "/" + java.util.UUID.randomUUID())
                         .then().statusCode(HttpStatus.SC_NOT_FOUND)
                         .header("Content-Type", containsString("application/problem+json"))
@@ -106,11 +106,11 @@ class ProblemDetailsTest {
     void invalidTransitionCarriesItsOwnType() {
         final var booking = create();
 
-        given().header("Authorization", bearer())
+        given().header("Authorization", this.tokenBuilder.bearer("usuario"))
                         .when().post(BOOKINGS + "/" + booking.id() + "/cancel")
                         .then().statusCode(HttpStatus.SC_OK);
 
-        given().header("Authorization", bearer())
+        given().header("Authorization", this.tokenBuilder.bearer("usuario"))
                         .when().post(BOOKINGS + "/" + booking.id() + "/cancel")
                         .then().statusCode(HttpStatus.SC_CONFLICT)
                         .header("Content-Type", containsString("application/problem+json"))
@@ -127,7 +127,7 @@ class ProblemDetailsTest {
 
     @Test
     void brokerFailureIsProblemJson() {
-        given().header("Authorization", bearer())
+        given().header("Authorization", this.tokenBuilder.bearer("usuario"))
                         .header("Idempotency-Key", "problem-broker")
                         .contentType(ContentType.JSON)
                         .body(new CreateBookingRequest(999, 1, 1, CHECK_IN, CHECK_IN.plusDays(2), 1, 1))
@@ -138,7 +138,7 @@ class ProblemDetailsTest {
     }
 
     private BookingResponse create() {
-        return given().header("Authorization", bearer())
+        return given().header("Authorization", this.tokenBuilder.bearer("usuario"))
                         .header("Idempotency-Key", "problem-create")
                         .contentType(ContentType.JSON)
                         .body(new CreateBookingRequest(1, 1, 1, CHECK_IN, CHECK_IN.plusDays(2), 1, 1))
@@ -147,7 +147,4 @@ class ProblemDetailsTest {
                         .extract().as(BookingResponse.class);
     }
 
-    private String bearer() {
-        return "Bearer " + this.tokenBuilder.createJWT("usuario", 86400000L);
-    }
 }
