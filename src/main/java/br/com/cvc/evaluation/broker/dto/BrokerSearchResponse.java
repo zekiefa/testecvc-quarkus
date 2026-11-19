@@ -16,10 +16,6 @@ public record BrokerSearchResponse(String cityCode, LocalDate checkIn, LocalDate
     public record Hit(Long hotelId, String hotelName, String cityCode, String cityName, Long roomTypeId,
                     String roomTypeName, Long ratePlanId, String ratePlanName, String board,
                     String cancellationPolicy, BigDecimal totalAmount, String currency, Instant updatedAt,
-                    Instant staleAfter, String dataSource, List<Night> nights) {
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public record Night(LocalDate date, BigDecimal adult, BigDecimal child) {
+                    Instant staleAfter, String dataSource, List<BrokerNight> nights) {
     }
 }

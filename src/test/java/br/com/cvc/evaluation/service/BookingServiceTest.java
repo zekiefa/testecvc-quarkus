@@ -196,7 +196,7 @@ class BookingServiceTest {
 
     private static QuotedHotel offer(final LocalDate checkIn, final int count) {
         final var quotedNights = IntStream.range(0, count)
-                        .mapToObj(offset -> new QuotedHotel.Night(checkIn.plusDays(offset), NIGHTLY_ADULT,
+                        .mapToObj(offset -> new QuotedNight(checkIn.plusDays(offset), NIGHTLY_ADULT,
                                         NIGHTLY_CHILD))
                         .toList();
 

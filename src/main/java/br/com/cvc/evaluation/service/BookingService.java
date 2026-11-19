@@ -10,6 +10,7 @@ import java.util.List;
 import br.com.cvc.evaluation.broker.dto.BrokerHotelDetail;
 import br.com.cvc.evaluation.catalog.HotelDetail;
 import br.com.cvc.evaluation.exceptions.RateUnavailableException;
+import br.com.cvc.evaluation.catalog.PricedNight;
 import br.com.cvc.evaluation.catalog.QuotedNight;
 import br.com.cvc.evaluation.catalog.BrokerCatalog;
 import br.com.cvc.evaluation.catalog.HotelOffer;
@@ -124,20 +125,20 @@ public class BookingService {
 
     /** Noite a noite, com a taxa aplicada — mesma regra da reserva. */
     private PricedNights price(final List<QuotedNight> nights, final int adults, final int children) {
-        final var priced = new ArrayList<HotelDetail.Night>(nights.size());
+        final var priced = new ArrayList<PricedNight>(nights.size());
         var total = BigDecimal.ZERO;
 
         for (final var night : nights) {
             final var adult = PricingCalculator.nightlyRate(night.adult(), this.settings.feeBps());
             final var child = PricingCalculator.nightlyRate(night.child(), this.settings.feeBps());
-            priced.add(new HotelDetail.Night(night.date().toString(), adult, child));
+            priced.add(new PricedNight(night.date().toString(), adult, child));
             total = total.add(PricingCalculator.nightlyTotal(adult, child, adults, children));
         }
 
         return new PricedNights(total.setScale(2, RoundingMode.HALF_UP), List.copyOf(priced));
     }
 
-    private record PricedNights(BigDecimal totalAmount, List<HotelDetail.Night> nights) {
+    private record PricedNights(BigDecimal totalAmount, List<PricedNight> nights) {
     }
 
     public List<HotelOffer> findHotels(final String cityCode, final LocalDate checkin, final LocalDate checkout,
@@ -164,13 +165,13 @@ public class BookingService {
     }
 
     private HotelOffer price(final QuotedHotel offer, final int adults, final int children) {
-        final var pricedNights = new ArrayList<HotelOffer.PricedNight>(offer.nights().size());
+        final var pricedNights = new ArrayList<PricedNight>(offer.nights().size());
         var total = BigDecimal.ZERO;
 
         for (final var night : offer.nights()) {
             final var adult = PricingCalculator.nightlyRate(night.adult(), this.settings.feeBps());
             final var child = PricingCalculator.nightlyRate(night.child(), this.settings.feeBps());
-            pricedNights.add(new HotelOffer.PricedNight(night.date().toString(), adult, child));
+            pricedNights.add(new PricedNight(night.date().toString(), adult, child));
             total = total.add(PricingCalculator.nightlyTotal(adult, child, adults, children));
         }
 

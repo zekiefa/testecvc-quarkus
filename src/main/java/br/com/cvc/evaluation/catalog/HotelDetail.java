@@ -17,9 +17,6 @@ public record HotelDetail(Long hotelId, String hotelName, String cityName, Strin
     }
 
     public record Plan(Long ratePlanId, String name, String board, String cancellationPolicy, boolean available,
-                    String currency, BigDecimal totalAmount, List<Night> nights) {
-    }
-
-    public record Night(String date, BigDecimal adult, BigDecimal child) {
+                    String currency, BigDecimal totalAmount, List<PricedNight> nights) {
     }
 }
