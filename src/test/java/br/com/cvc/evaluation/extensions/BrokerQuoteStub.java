@@ -23,8 +23,6 @@ import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
 public class BrokerQuoteStub implements ResponseDefinitionTransformerV2 {
 
     private static final ObjectMapper MAPPER = new ObjectMapper().findAndRegisterModules();
-    private static final String ADULT = "900.00";
-    private static final String CHILD = "450.00";
     private static final long FAILING_HOTEL = 999L;
     /** Unico hotel/quarto que o stub conhece: os testes dos demais casos usam ids fora daqui. */
     private static final long KNOWN_HOTEL = 1L;
@@ -99,9 +97,7 @@ public class BrokerQuoteStub implements ResponseDefinitionTransformerV2 {
 
     private static ResponseDefinition quote(final String currency, final LocalDate checkIn, final long nights,
                     final java.time.Instant staleAfter) {
-        final var nightEntries = Stream.iterate(checkIn, date -> date.plusDays(1)).limit(nights)
-                        .map(date -> "{\"date\":\"%s\",\"adult\":%s,\"child\":%s}".formatted(date, ADULT, CHILD))
-                        .collect(Collectors.joining(","));
+        final var nightEntries = BrokerJson.nights(checkIn, nights);
 
         final var json = """
                         {"currency":"%s","totalAmount":0,"nights":[%s],
